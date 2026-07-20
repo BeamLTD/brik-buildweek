@@ -1,27 +1,86 @@
 # BRIK — Codex Build Log
 
-Record of how **Codex** (OpenAI's coding agent) contributed to building BRIK during Build Week.
+Evidence-backed record of how Codex materially contributed to the BRIK extension on July 18, 2026, during OpenAI Build Week. Later July 19 repository and deployment outcomes are documented separately and are not attributed to Codex unless supported by matching session evidence.
 
-> **Populate the placeholders below with your actual Codex session exports/screenshots before submission.** This scaffold lists the categories of Codex-assisted work; replace each `[TODO]` with dated evidence (session export, transcript link, or screenshot reference). Do not claim a Codex session that did not occur.
+## Attribution key
 
-## What Codex was used for
-- Architecture iteration (crew design, context pipeline, honest live-vs-deterministic split)
-- Synthetic Maya dataset generation (six-month ledger, category deltas)
-- Native screen implementation (`BrikCoachScreen`, navigation wiring)
-- Edge Function development (`api/analyst.js`, Supabase `brik-explain`)
-- Navigation and rendering debugging
-- Testing and QA (smoke tests, endpoint checks)
-- Agent/role scaffolding (Analyst / Oracle / Strategist / Guardian / BRIK prompts and deterministic logic)
+- **Codex implemented** — the Codex rollout contains the task, edits or commands, and reported verification; repository state and git history corroborate the result.
+- **Codex assisted** — Codex inspected, diagnosed, tested, documented, or made consistency/QA edits, but the evidence does not support sole implementation attribution.
+- **Human-directed product decision** — the user explicitly specified the product behavior, values, names, safety boundary, or deployment action. Codex executed or checked that direction.
 
-## Sessions
+## Session inventory
 
-| Date | Codex session | What it generated / debugged / tested | Related commit(s) | Evidence |
-|---|---|---|---|---|
-| [TODO date] | [TODO session name/export] | [TODO: e.g. generated synthetic Maya ledger + buildBrikContext adapter] | `8598598` | [TODO screenshot/log link] |
-| [TODO date] | [TODO session name/export] | [TODO: e.g. scaffolded the OpenAI Responses API edge function] | `4d54c01` | [TODO] |
-| [TODO date] | [TODO session name/export] | [TODO: e.g. debugged native navigation into BRIK Coach] | `8598598` | [TODO] |
+Two relevant Codex records were located before this audit:
 
-## Notes
-- The model surfaced in the Codex environment during this build was **GPT-5.6 Sol** (see submission screenshots).
-- All Codex-generated code was reviewed before commit; no secrets were committed (keys are server-side env only).
-- If any evidence cannot be exported due to tooling limits, note that here rather than leaving a gap.
+1. **Implementation thread `019f73de…3563`**, titled “Create brik demo branch,” spanning **2026-07-18 02:16–19:23 EDT** (`06:16–23:23Z`). Repository: STAKD monorepo. Branch: `brik-buildweek-demo`. This is the sole located Codex implementation session.
+2. **Approval-review thread `019f74e1…4b5a`**, spanning **2026-07-18 06:59–19:21 EDT**. It evaluated proposed actions from the implementation thread and did not implement product work. It is supporting evidence only and is not counted as an implementation session.
+
+The current documentation-audit session is intentionally excluded from the Build Week implementation count.
+
+## Verified implementation work
+
+All times below are America/New_York (EDT). Rows are material task segments within the single implementation session, not separate sessions.
+
+| Date and time | Session | Repository / branch | Task requested | What Codex actually did | Files affected | Commands and tests actually run | Result | Git / supporting evidence |
+|---|---|---|---|---|---|---|---|---|
+| 2026-07-18 02:17 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Create and switch to an isolated demo branch; audit the handoff and app seams before editing. | **Codex assisted.** Read the repository instructions and handoff, inspected the active Home/navigation/context/action/theme files and package metadata, reviewed the required documentation, and created the requested branch. | No product files in the branch-creation turn. | `git status --short --branch`; `git branch`; `git switch -c brik-buildweek-demo`; repository and documentation reads. | Branch created without editing `main` or `design-team-dark-redesign`. Repository instructions, package metadata, and the relevant application seams were reviewed before product changes began. | Codex rollout command/result events; current branch and git ancestry. |
+| 2026-07-18 02:22–02:50 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Build Phase 1: Maya's six-local-month synthetic ledger, deterministic BRIK context adapter, typed five-member crew, Guardian 30%→22% review, exactly three actions, and `BrikCoachScreen`. | **Codex implemented.** Added the synthetic transactions and Ventures; routed them through the existing `buildInsightContext`; added `buildBrikContext`; scaffolded Analyst, Oracle, Strategist, Guardian, and BRIK structured outputs; mapped `CreateStak`, `CreateCut`, and `SetGoal`; built the native coach screen. **Human-directed decisions:** Maya, the crew names, the 30% proposal, 22% Guardian cap, and three-action requirement. | `src/ai/types.ts`, `src/ai/demoMaya.ts`, `src/ai/buildBrikContext.ts`, `src/ai/mockConstellation.ts`, `src/screens/BrikCoachScreen.tsx`. | `npx tsc --noEmit`; direct execution of the Maya fixture through `buildInsightContext`/adapter for reported metrics; git diff/status checks. | TypeScript passed. Reported deterministic July values: Built $5,400; Cuts $3,600; Kept $1,800; Monthly Keep Rate 33.33%; previous 50.00%; delta −16.67 points; biggest Cut “August rent reserve,” $1,550; top Venture Northstar Studio, 82.62% of lifetime Built; builder stage `building`; six momentum months. | Commit `8598598` contains the five Phase 1 files and native feature. Codex rollout contains the patches, commands, and metric output. |
+| 2026-07-18 03:16–06:21 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Add the coach route and “ASK BRIK” entry additively; run iOS Simulator QA; verify semantic actions and Back behavior. | **Codex implemented and tested.** Registered the root-stack route, added the Home CTA and demo-data badge, made weekly moves tappable, added explicit Back behavior, and exercised the semantic destinations. Temporary QA-only hooks were added and then removed. | `src/navigation/AppNavigator.tsx`, `src/screens/HomeScreen.tsx`, `src/screens/BrikCoachScreen.tsx`; evidence screenshots under `brik-buildweek/`. | `npx tsc --noEmit`; `npm run test:game`; `npx expo start --go`/simulator launch commands; `xcrun simctl` boot/open/screenshot/log commands; git diff/status/check commands. | TypeScript passed; the existing game suite reported **42 passing tests**. The screen, Maya data, demo badge, Guardian review, three actions, action destinations, and Back flow were verified without a red screen. Literal GUI tapping was partly constrained by macOS accessibility, so the same production handler was exercised through temporary QA states; those hooks were removed. | Commit `8598598`; `phase3-home.png`, `phase3-coach-top.png`, `phase3-coach-plan.png`, `phase3-weekly-actions.png`, `phase3-set-goal.png`; rollout commands/results. |
+| 2026-07-18 07:03–07:12 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Make Maya, Monthly Keep Rate, and the Analyst/Oracle/Strategist/Guardian/BRIK crew consistent across the native and web demo surfaces. | **Codex assisted.** Replaced conflicting legacy persona/crew/percentage/formula copy and aligned the Hub, Product Demo, Reasoning Demo, Blueprint, spec, mock constellation, and coach label to the deterministic Maya story. **Human-directed decision:** the canonical persona, metric/formula, crew vocabulary, and 30%→22% story. | `brik-buildweek/SPEC.md`, `index.html`, `build.html`, `demo-design.html`, `demo.html`, `src/ai/mockConstellation.ts`, `src/screens/BrikCoachScreen.tsx`. | Repository-wide `rg` consistency sweeps; JavaScript syntax checks; `npx tsc --noEmit`; git diff/check commands. | Legacy Scout/Trim/Horizon and conflicting demo claims were removed from the edited Build Week surfaces. | The rollout contains the exact patches. Commit `4d54c01` later records the deploy-ready web package; commit `8598598` records native files. The commits were authored by the human account, and no `git commit` command appears in the Codex rollout. |
+| 2026-07-18 07:21–07:57 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Implement one real OpenAI Analyst explanation using the Responses API, strict structured output, authenticated Supabase `brik-explain`, and a deterministic fallback. | **Codex implemented locally.** Added an allowlisted native client contract, strict response validation, the authenticated Supabase Edge Function, JSON-schema Structured Outputs, live trace fields, and fallback behavior. An earlier `brik-explanation` draft was superseded by the user-provided `brik-explain` contract. **Human-directed decisions:** model/API requirement, deterministic money boundary, Analyst-only live scope, and function name. | `src/ai/client.ts`, `src/screens/BrikCoachScreen.tsx`, `supabase/functions/brik-explain/index.ts`, `supabase/functions/README.md`, `scripts/brik-phase5-smoke.mjs`; earlier draft path removed/superseded. | Official OpenAI/Expo documentation checks; `npx tsc --noEmit`; `npm run test:game`; `node scripts/brik-phase5-smoke.mjs`; `git diff --check`; Supabase CLI availability/project checks. | Static validation passed: TypeScript, 42 game tests, smoke test, and whitespace check. Deployment was initially blocked by missing CLI authentication/server configuration, and Codex reported that honestly. | Commit `8598598` contains the client and `brik-explain`; `4d54c01` contains the smoke script and deploy package; rollout patches/results. |
+| 2026-07-18 07:29–07:53 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Diagnose the coach appearing briefly and returning to Home; verify stability through auth/repository/lifecycle changes before resuming OpenAI work. | **Codex diagnosed and implemented the fix.** It found that transient `isLoaded=false` caused `AppContent` to return `null`, unmounting `NavigationContainer`; the recreated navigator started at Home. Codex kept the navigator mounted behind a loading overlay, removed diagnostics, and tested lifecycle/repository transitions. | `App.tsx`; temporary diagnostics in navigation/coach code were removed. | Expo/simulator launch; Metro and simulator log inspection; lifecycle/navigation diagnostics; repeated route opens; background/foreground checks; screenshot capture; `npx tsc --noEmit`; `npm run test:game`; `git diff --check`. | “Navigator reset issue fully resolved” was reported after the coach remained stable beyond 30 seconds and navigation survived the exercised transitions. No OpenAI call was added during the urgent-fix turn. | Commit `8598598` includes the `App.tsx` loading-overlay change; `brik-coach-stable.png`; implementation and approval-review rollouts. |
+| 2026-07-18 08:11–08:50 and 15:39–15:44 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Authenticate Supabase CLI, deploy `brik-explain`, verify secret presence without revealing values, invoke from the simulator, then repeat after billing was enabled. | **Codex implemented/deployed/tested with user authorization.** Linked the existing project, verified only the required secret names/digests, deployed the clean function, traced the first upstream failure to OpenAI `429 insufficient_quota`, confirmed fallback behavior, removed temporary diagnostics, and later produced two distinct successful live responses after the human enabled billing. | Deployed `supabase/functions/brik-explain/index.ts`; temporary diagnostic edits to `src/ai/client.ts`, the function, and coach screen were removed; evidence screenshots added. | `npx supabase login/link/secrets list/functions deploy brik-explain`; simulator invocation and screenshots; `npx tsc --noEmit`; `npm run test:game`; `node scripts/brik-phase5-smoke.mjs`; `git diff --check`. | First live attempt: authenticated routing worked, OpenAI returned 429, deterministic fallback displayed. Second deployment window: two distinct Responses API calls succeeded using reported model `gpt-5.6`; UI displayed “GENERATED LIVE WITH OPENAI.” Final TypeScript, 42-test game suite, smoke test, and diff check passed; temporary triggers/logs were removed. | `phase5-live-analyst-1.png`, `phase5-live-analyst-1-detail.png`, `phase5-live-analyst-2.png`; rollout deploy outputs and redacted response references; commit `8598598`. Secret values are intentionally omitted. |
+| 2026-07-18 15:48–17:53 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Fix clipped 33.3%, then audit the proposed 30% and approved 22% display values for the same iOS font-metric issue. | **Codex implemented and tested.** Increased line-height/top spacing for the affected Saira display styles without changing calculations. | `src/screens/BrikCoachScreen.tsx`; screenshots. | Simulator screenshots; `npx tsc --noEmit`; `git diff --check`. | TypeScript and diff check passed; current Keep Rate and Strategist/Guardian percentages rendered without clipping in captured simulator evidence. | `phase5-keep-rate-clipping-fixed.png`, `phase5-display-number-clipping-fixed.png`; rollout patches/results; commit `8598598`. |
+| 2026-07-18 19:20–19:23 | `019f73de…3563` | STAKD / `brik-buildweek-demo` | Produce a canonical truth sheet from the working repository without editing code. | **Codex assisted.** Read the deterministic context, crew, live client/function, screen, navigation, package metadata, and Build Week documentation; summarized implemented versus illustrative claims. | None. | Read-only `rg`/`sed`/git inspection. | Produced a repository-grounded truth sheet for later submission preparation. | Final messages and read commands in the implementation rollout. |
+
+## Verified technical outcomes
+
+- Maya's ledger covers February–July 2026 and includes a transfer specifically exercising the existing exclusion logic.
+- `buildInsightContext()` remains the deterministic source for the current-month figures; `buildBrikContext()` creates the allowlisted six-month AI-facing projection.
+- The native crew is Analyst, Oracle, Strategist, Guardian, and BRIK. Only the Analyst explanation is live OpenAI output; the other roles and synthesis are deterministic Build Week logic.
+- The Strategist's 30% variable-payout proposal and Guardian's reduction to 22% were explicit human requirements implemented by Codex, not independently selected financial advice from Codex.
+- Semantic actions route to existing STAKD destinations: `CreateStak`, `CreateCut`, and `SetGoal`.
+- The native OpenAI path uses an authenticated Supabase `brik-explain` function, the OpenAI Responses API, strict JSON-schema Structured Outputs, an allowlisted context, and a deterministic fallback.
+- Two successful simulator-backed live invocations were recorded after billing was enabled; earlier quota failure and fallback behavior were also recorded.
+
+## Git and repository corroboration
+
+- `8598598` — **BRIK Coach: in-app AI reasoning feature backed by a live GPT edge function**; 11 files, including the Maya/context/crew/client/screen/navigation/App/Supabase implementation.
+- `4d54c01` — **Build Week: BRIK demo deliverables — deploy-ready contest package**; web surfaces, deployment documentation, API/server paths, smoke test, and simulator evidence.
+- `80fc127`, `8daeb90`, `c91dedb`, `a6dad29`, `f58a223`, `5832a2f`, `d8a6e28`, and `e61a7bf` corroborate later site integration, submission documents, branded-domain claims, and truth/QA sweeps on July 19. They are **not attributed to Codex** here because no matching Codex implementation session was located.
+- The branch was created in the Codex rollout. The later commits list the human git identity as author; session evidence shows Codex edits but no Codex-issued `git commit` command.
+
+## Public website and submission preparation
+
+Repository evidence verifies that the Build Week website package, Vercel endpoint code, deployment guide, README, Devpost copy, video script, and branded URL documentation exist. Git history also records `c91dedb` with the subject “CPO final copy sweep + brik.mystakd.com live.” However:
+
+- The located Codex session verifies consistency edits to the Build Week HTML surfaces and creation/testing of parts of the deploy-ready package.
+- No Codex session was located for the actual Vercel production deployment, custom-domain/DNS operation, design-team refresh integration on July 19, or creation of `README.md`, `DEVPOST.md`, and `VIDEO_SCRIPT.md`.
+- Those items are therefore project/git evidence, not claimed Codex contributions.
+
+## Attribution Boundaries and Evidence Not Located
+
+The following project outcomes are intentionally not attributed to Codex because matching session evidence was not located. This does not mean the work did not occur; it means this public log preserves a strict evidence boundary.
+
+- A separate Codex session named for `BRIK`, `BrikCoach`, Maya, `buildInsightContext`, `buildBrikContext`, `brik-explain`, Supabase, GPT-5.6, Responses API, navigation reset, Guardian 30%→22%, Vercel, or the branded deployment. These tasks were turns inside the single `019f73de…3563` implementation thread.
+- A Codex session or command showing the actual Vercel production deployment or `brik.mystakd.com` DNS/domain attachment.
+- A Codex session implementing the July 19 design-team website refresh.
+- A Codex session creating the July 19 README, Devpost, or video-script submission package; the relevant commit is also referenced by a `claude/...` worktree branch.
+- Codex-authored commit operations for `8598598` or `4d54c01`; the rollout contains edits and tests, while git records the human identity as commit author.
+- A preserved raw deployment log for the public Vercel site in this repository. `DEPLOY.md`, live-URL documentation, endpoint source, and commit subjects corroborate the outcome but are not equivalent to a Codex deployment transcript.
+- The Codex implementation-session evidence verified live Responses API calls using the model identifier returned as `gpt-5.6`. Later public materials use the product label ‘GPT-5.6 Sol.’ The final submission must confirm and standardize the exact deployed model name before recording.
+
+## Evidence sources used
+
+- Read-only local Codex thread catalog, session index, and the two relevant July 18 rollout files.
+- Primary rollout user requests, assistant summaries, file patches, executed commands, command results, and timestamps.
+- The parallel approval-review rollout as corroboration of simulator, deployment, and diagnostic actions.
+- Git branches, ancestry, commit metadata/timestamps, commit subjects, changed-file lists, and diffs.
+- Current source files, Build Week documentation, smoke-test script, deployment guide, changelog, README, Devpost copy, and video script.
+- Repository simulator screenshots listed above.
+
+No raw session database or full transcript was copied into the repository.
+
+## Sensitive-information handling
+
+Credentials supplied during simulator QA, Supabase verification codes, project identifiers, response IDs, local environment values, API keys/tokens, secret digests, and unnecessary absolute paths are omitted. Only the existence of required secret names and redacted response evidence is summarized. No credential value was added to this document.
