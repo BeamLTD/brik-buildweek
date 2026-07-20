@@ -32,7 +32,7 @@ Timing is a guide. `[SCREEN]` = what's shown, `[VO]` = what you say.
 
 ### 2:10–2:30 · Close
 `[SCREEN]` Back to the hub / thesis line.
-`[VO]` "That's BRIK. Deterministic where money's involved. Generative where language and judgment are. **STAKD calculates the truth. OpenAI reasons over the truth. BRIK communicates the truth.**"
+`[VO]` "That's BRIK. Deterministic where money's involved. Generative where language and judgment are. **STAKD calculates the truth. OpenAI reasons over the truth. BRIK speaks the truth.**"
 
 ---
 

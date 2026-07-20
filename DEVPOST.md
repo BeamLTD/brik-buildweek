@@ -25,7 +25,7 @@ BRIK sits on top of STAKD's deterministic financial engine and answers four ques
 - **What could happen next** (clearly labeled scenario estimates)
 - **What practical moves** you may want to consider — each one opening a real STAKD screen; nothing moves automatically
 
-It does this through a five-member crew — **Analyst, Oracle, Strategist, Guardian, and BRIK** — with a hard rule: the model never invents, alters, or re-derives a financial figure. STAKD calculates the truth; OpenAI reasons over it; BRIK communicates it.
+It does this through a five-member crew — **Analyst, Oracle, Strategist, Guardian, and BRIK** — with a hard rule: the model never invents, alters, or re-derives a financial figure. STAKD calculates the truth; OpenAI reasons over it; BRIK speaks it.
 
 The differentiator is the **Guardian**: it visibly overrules the Strategist, cutting a proposed 30% payout set-aside to 22% because the user's income is variable and obligations are upcoming. Disagreement, in the open, is what makes the advice trustworthy.
 

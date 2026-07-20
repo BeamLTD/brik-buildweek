@@ -1,6 +1,6 @@
 # BRIK — The AI Wealth Reasoning Layer for STAKD
 
-**STAKD calculates the truth. OpenAI reasons over the truth. BRIK communicates the truth.**
+**STAKD calculates the truth. OpenAI reasons over the truth. BRIK speaks the truth.**
 
 BRIK is not another budgeting app. It's a financial **reasoning layer** that sits on top of STAKD's deterministic financial engine and helps a builder understand four things: **what changed, why it changed, what could happen next, and what practical moves they may want to consider.**
 
