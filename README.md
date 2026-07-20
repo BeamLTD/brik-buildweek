@@ -10,10 +10,10 @@ Built for **OpenAI Build Week**.
 
 ## Live demo
 
-- **Hub:** https://brik-buildweek.vercel.app
-- **The Product** (how it feels): https://brik-buildweek.vercel.app/demo-design.html
-- **The Reasoning** (how it thinks — live GPT): https://brik-buildweek.vercel.app/demo.html
-- **The Blueprint** (how it's made): https://brik-buildweek.vercel.app/build.html
+- **Hub:** https://brik.mystakd.com
+- **The Product** (how it feels): https://brik.mystakd.com/demo-design.html
+- **The Reasoning** (how it thinks — live GPT): https://brik.mystakd.com/demo.html
+- **The Blueprint** (how it's made): https://brik.mystakd.com/build.html
 
 On the Reasoning page, press **Ask BRIK Why** to stream a live explanation from **GPT-5.6 Sol** via the OpenAI Responses API. The response shows a live trace — `LIVE · gpt-5.6-sol · resp_… · N tok · Nms` — and a **Generated live with OpenAI** badge.
 

@@ -56,6 +56,6 @@ Production multi-agent orchestration, scenario forecasting, and — only behind 
 `openai` · `gpt-5.6-sol` · `responses-api` · `structured-outputs` · `supabase` · `edge-functions` · `vercel` · `react-native` · `expo` · `typescript` · `postgres` · `codex`
 
 ## Links
-- **Live demo:** https://brik-buildweek.vercel.app  (custom domain in progress: https://brik.mystakd.com)
-- **Repo:** https://github.com/BeamLTD/brik-buildweek
+- **Live demo:** https://brik.mystakd.com  (also at https://brik-buildweek.vercel.app)
+- **Repo:** https://github.com/BeamLTD/STAKD  *(make public before submitting)*
 - **Video:** *(YouTube link — see VIDEO_SCRIPT.md)*
