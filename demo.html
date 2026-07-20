@@ -2,8 +2,8 @@
 <!--
   BRIK — the OpenAI reasoning layer on top of STAKD's existing deterministic Keep Engine.
   ALL DATA IN THIS DEMO IS SYNTHETIC (persona: "Maya"). No live bank connection,
-  no autonomous money movement. Agent responses here are deterministic MOCKS;
-  inline // LIVE comments mark where OpenAI Responses API + Structured Outputs slot in.
+  no autonomous money movement. The live Analyst streams via the OpenAI Responses API; other roles are deterministic.
+  inline // LIVE comments mark where the OpenAI Responses API drives the live Analyst.
   Monthly Keep Rate = (Built - Cuts) / Built, displayed as a percentage, per local calendar month.
 -->
 <style>
@@ -398,7 +398,7 @@
           <span class="brik" data-brik data-state="think"></span>
           <div>
             <h2 class="scene-h">Ask BRIK why</h2>
-            <p class="sub">The <b>Analyst</b> reads the structured context and explains the change in plain language — every figure comes from Maya's own logged data.</p>
+            <p class="sub">The <b>Analyst</b> reads the structured context and explains the change in plain language — every figure comes from Maya's synthetic logged ledger.</p>
           </div>
         </div>
         <div class="card">
@@ -452,7 +452,7 @@
       <section class="scene" data-scene="4">
         <div class="eyebrow">Step 05 — Propose</div>
         <h2 class="scene-h">Three moves</h2>
-        <p class="sub">The <b>Strategist</b> ranks moves by estimated dollars kept — and each one maps to a real STAKD action Maya taps herself. Nothing here moves money on its own.</p>
+        <p class="sub">The <b>Strategist</b> ranks moves by estimated dollars kept — each one maps to an actual native STAKD screen Maya taps herself. Nothing moves automatically, and this public web demonstration does not execute a financial action.</p>
         <div class="ivgrid" id="ivgrid"></div>
         <p class="note">Strategist proposes. Guardian reviews next — BRIK never cancels a subscription, sweeps funds, or moves money automatically. It opens the right STAKD screen and Maya decides.</p>
         <div class="cta-row"><button class="btn primary" onclick="go(5)">Send to Guardian →</button></div>
@@ -465,7 +465,7 @@
           <span class="brik" data-brik data-state="deadpan"></span>
           <div>
             <h2 class="scene-h">Guardian review</h2>
-            <p class="sub">Before anything reaches Maya, the <b>Guardian</b> checks each proposal against her real constraints — and it can modify or reject the Strategist.</p>
+            <p class="sub">Before anything reaches Maya, the <b>Guardian</b> checks each proposal against the constraints supplied in Maya's synthetic context — and it can modify or reject the Strategist.</p>
           </div>
         </div>
         <div class="card">
@@ -569,7 +569,7 @@
         <div class="footnote">
           <b>Build Week addition = the OpenAI reasoning layer</b> on top of STAKD's existing deterministic engine.<br>
           No new bank aggregation, no automatic money movement, no autonomous account control.<br>
-          <span style="color:var(--faint)">All data synthetic (persona: Maya). Analyst explanations are generated live using GPT-5.6 Sol (OpenAI Responses API · Structured Outputs); Oracle, Strategist, Guardian &amp; BRIK synthesis remain deterministic for this Build Week demonstration.</span>
+          <span style="color:var(--faint)">Synthetic user content (persona: Maya). This public web demo streams a live GPT-5.6 Sol Analyst explanation via the OpenAI Responses API. The native STAKD integration uses an authenticated Supabase Edge Function with strict Structured Outputs. Oracle, Strategist, Guardian &amp; BRIK synthesis are deterministic in this Build Week demonstration.</span>
         </div>
       </section>
     </main>

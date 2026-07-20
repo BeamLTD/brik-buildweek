@@ -45,7 +45,7 @@ Per local calendar month, transfers excluded. It answers the question traditiona
 ## What is real today
 
 **Live**
-- ✅ GPT-5.6 Sol Analyst reasoning (OpenAI **Responses API** + **Structured Outputs**)
+- ✅ GPT-5.6 Sol Analyst reasoning via the OpenAI **Responses API** — **streamed text** on the public web demo; strict **Structured Outputs** (JSON schema) on the native Supabase path
 - ✅ Serverless **Edge Function** → OpenAI (Vercel for this web demo; Supabase `brik-explain` in the STAKD app)
 - ✅ Deterministic **Keep Engine** (the math is code, not a model)
 - ✅ Semantic action routing (recommendations open real STAKD screens)
@@ -59,6 +59,35 @@ Per local calendar month, transfers excluded. It answers the question traditiona
 - Live banking integrations
 
 The Analyst is live. Oracle, Strategist, Guardian, and BRIK synthesis are **deterministic** for this Build Week demonstration.
+
+> Every number shown to the model is computed and allowlisted by STAKD. The model may explain those values but may not alter, replace, or derive new financial figures.
+
+---
+
+## What existed before Build Week
+
+- STAKD's existing React Native / Expo application
+- Transaction logging
+- Deterministic Built, Cuts, Kept, and Monthly Keep Rate calculations
+- Existing Supabase infrastructure
+- Existing STAKD actions and navigation
+
+## What we built during Build Week
+
+- BRIK reasoning layer
+- Synthetic Maya six-month ledger
+- `buildBrikContext` adapter
+- Native BRIK Coach experience
+- Five-member product crew
+- Live GPT-5.6 Sol Analyst integration
+- Vercel public Analyst endpoint
+- Authenticated Supabase `brik-explain` Edge Function
+- Guardian 30% → 22% review moment
+- Public Product, Reasoning, and Blueprint demonstrations
+- Semantic action mapping
+- Build Week testing and QA
+
+See `BUILD_WEEK_CHANGELOG.md` and `CODEX_BUILD_LOG.md` for dated detail.
 
 ---
 
@@ -82,7 +111,7 @@ Transactions
    ↓  buildBrikContext()
 Allowlisted Financial Context
    ↓
-GPT-5.6 Sol Reasoning   (OpenAI Responses API · Structured Outputs)
+GPT-5.6 Sol Reasoning   (Responses API — streamed on web · Structured Outputs on native)
    ↓
 BRIK
    ↓
@@ -95,7 +124,7 @@ Reviewed Actions        (the user acts; nothing moves automatically)
 
 ## Stack
 
-- **Reasoning:** GPT-5.6 Sol · OpenAI Responses API · Structured Outputs (strict JSON schema)
+- **Reasoning:** GPT-5.6 Sol · OpenAI Responses API — **streamed text** on the public web demo; strict **Structured Outputs** (JSON schema) on the native Supabase `brik-explain` path
 - **Serving:** Edge Function — Vercel (web demo) · Supabase `brik-explain` (app)
 - **App:** STAKD — React Native / Expo (SDK 54)
 - **Data:** Supabase — Postgres + RLS

@@ -5,7 +5,8 @@
 <!--
   "The Build" — door C of the BRIK Build Week submission. Styled companion to SPEC.md,
   aligned to the locked truth (Maya · Monthly Keep Rate · simulated framing · one crew vocabulary).
-  // LIVE marks where OpenAI (Responses API + Structured Outputs + Agents SDK) slots in.
+  // The live Analyst uses the OpenAI Responses API. Structured Outputs (native Supabase path)
+  // and Agents SDK orchestration are roadmap, marked as such.
 -->
 <style>
   :root{
@@ -117,7 +118,7 @@
   <section>
     <span class="snum">01 · Architecture</span>
     <h2>The pipeline</h2>
-    <p class="lead">Deterministic where money is involved; generative where language and judgment are. Five stages, one direction.</p>
+    <p class="lead">Deterministic where money is involved; generative where language and judgment are. Six stages, one direction.</p>
     <div class="flow">
       <div class="fnode"><div class="fk">1 · ingest</div><div class="fv">Staks &amp; Cuts<br><span style="font-weight:400;color:var(--faint);font-size:11px">manual · logged in STAKD</span></div></div>
       <span class="farrow">→</span>
@@ -125,7 +126,7 @@
       <span class="farrow">→</span>
       <div class="fnode"><div class="fk">3 · structure</div><div class="fv">Money Context<br><span style="font-weight:400;color:var(--faint);font-size:11px">typed JSON pack</span></div></div>
       <span class="farrow">→</span>
-      <div class="fnode"><div class="fk">4 · reason</div><div class="fv">The crew<br><span style="font-weight:400;color:var(--faint);font-size:11px">4 agents · OpenAI</span></div></div>
+      <div class="fnode"><div class="fk">4 · reason</div><div class="fv">The crew<br><span style="font-weight:400;color:var(--faint);font-size:11px">1 live GPT Analyst · 3 deterministic roles · BRIK coach</span></div></div>
       <span class="farrow">→</span>
       <div class="fnode hl"><div class="fk">5 · communicate</div><div class="fv">BRIK synthesis</div></div>
       <span class="farrow">→</span>
@@ -158,7 +159,7 @@
   <!-- 2 · THE CREW -->
   <section>
     <span class="snum">02 · The crew</span>
-    <h2>Five agents, one coach</h2>
+    <h2>Five-member crew: four specialists and one coach</h2>
     <p class="lead">Each agent is one job, one prompt, one output schema, and read-only tools scoped to its lane. BRIK reconciles them and is the only one that speaks to you.</p>
     <div class="crew">
       <div class="agent lead"><div class="nm">BRIK</div><div class="role">Coach · orchestrator</div><div class="d">Reconciles the crew, resolves conflicts, and delivers Maya's Monthly Keep Rate plan in warm, plain language.</div></div>
@@ -203,7 +204,7 @@
   <section>
     <span class="snum">04 · Reasoning flow</span>
     <h2>How a run happens</h2>
-    <p class="lead">Fan out the independent lenses in parallel, gate them through risk, then reconcile. Built on the OpenAI Agents SDK; every agent returns Structured Outputs, so the app parses data, not prose.</p>
+    <p class="lead">The live Analyst uses the OpenAI Responses API. The remaining specialist roles and BRIK synthesis are deterministic structured logic in this Build Week demonstration. Production Agents SDK orchestration — fan out, gate, reconcile — is roadmap.</p>
     <div class="chain">
       <div class="step"><div class="i">1</div><div class="b"><div class="nm">Classify &amp; feature-build <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">· deterministic + fast model</span></div><div class="dd">Every transaction → <code>earned / cut / transfer</code>; the engine computes deltas and writes citable <code>evidence</code> strings.</div></div></div>
       <div class="step"><div class="i">2</div><div class="b"><div class="nm">Explain — Analyst <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">· streamed</span></div><div class="dd">Why Monthly Keep Rate moved, in plain language. No figure the engine didn't compute.</div></div></div>
@@ -222,8 +223,10 @@
       <div class="card">
         <h3>Stack</h3>
         <div class="kv">
-          Reasoning: <span class="t">GPT-5.6 Sol</span> · OpenAI Responses API · Structured Outputs<br>
-          Orchestration: <span class="t">Agents SDK</span> · fan-out → gate → reconcile<br>
+          Public Analyst: <span class="t">GPT-5.6 Sol</span> · OpenAI Responses API · streamed text<br>
+          Native integration: Supabase Edge Function · Responses API · <span class="t">Structured Outputs</span><br>
+          Current orchestration: deterministic specialist flow · review → reconcile<br>
+          Roadmap: <span style="color:var(--gold)">OpenAI Agents SDK · fan-out → gate → reconcile</span><br>
           Voice: Realtime API <span style="color:var(--gold)">(planned)</span><br>
           App: STAKD · React Native / Expo (SDK 54)<br>
           Data: Supabase · Postgres + RLS
@@ -262,7 +265,7 @@
         <tr><td>2</td><td>Classifier + feature store with evidence strings</td><td class="real">real</td></tr>
         <tr><td>2–3</td><td>Analyst streaming + Oracle scenarios</td><td class="real">real</td></tr>
         <tr><td>3</td><td>Strategist proposals + Guardian gate (visible overrule)</td><td class="real">real</td></tr>
-        <tr><td>4</td><td>BRIK orchestrator (Agents SDK) → weekly plan + trace</td><td class="real">real</td></tr>
+        <tr><td>4</td><td>BRIK deterministic reconciler → weekly plan + trace <span class="sim">(Agents SDK · roadmap)</span></td><td class="real">real</td></tr>
         <tr><td>4</td><td>Realtime voice brief</td><td class="sim">stretch</td></tr>
         <tr><td>5</td><td>Wire to endpoints behind a DEMO_MODE flag · rehearse · record</td><td class="real">real</td></tr>
       </tbody>
@@ -271,6 +274,6 @@
 
   <div class="foot">
     <b>BRIK — the OpenAI reasoning layer on top of STAKD's deterministic engine.</b><br>
-    Full technical deep-dive: SPEC.md in the repo. Concept · synthetic data · not production-complete by design.
+    Full technical deep-dive: SPEC.md in the repo. Working Build Week demonstration · synthetic persona data · not production-complete by design.
   </div>
 </div>

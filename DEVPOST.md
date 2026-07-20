@@ -31,7 +31,7 @@ The differentiator is the **Guardian**: it visibly overrules the Strategist, cut
 
 ## How we built it
 - **Deterministic Keep Engine** computes Monthly Keep Rate = ((Built − Cuts) ÷ Built) × 100 and hands the agents a structured, **allowlisted** context pack where every figure is citable.
-- The **Analyst runs live** on **GPT-5.6 Sol** via the OpenAI **Responses API** with **Structured Outputs** (strict JSON schema), streamed to the UI with a visible trace (response id, tokens, latency).
+- The **Analyst runs live** on **GPT-5.6 Sol** via the OpenAI **Responses API**. The public web demo streams the Analyst as text; the native STAKD integration (authenticated Supabase Edge Function) enforces strict **Structured Outputs** (JSON schema). Both surface a visible trace (response id, tokens, latency).
 - Served by a serverless **Edge Function** — Vercel for the public web demo, **Supabase `brik-explain`** inside the STAKD app — with the API key held server-side only.
 - The STAKD app is **React Native / Expo (SDK 54)** on **Supabase (Postgres + RLS)**.
 - Oracle, Strategist, Guardian, and BRIK synthesis are deterministic for this Build Week demonstration.
@@ -39,10 +39,10 @@ The differentiator is the **Guardian**: it visibly overrules the Strategist, cut
 
 ## Challenges we ran into
 - **Honesty under a demo deadline.** It's easy to imply a full autonomous multi-agent system exists. We drew a hard line: label what's live (the Analyst) vs. what's deterministic or roadmap, and never let the model state a number the engine didn't compute.
-- **Keeping the model on a leash.** Structured Outputs plus an allowlisted context pack means the model reasons over verified figures and returns parseable data, not free-form prose that could drift.
+- **Keeping the model on a leash.** A server-side allowlisted context pack (and, on the native path, strict Structured Outputs) means the model reasons only over verified figures and cannot derive or invent numbers.
 
 ## Accomplishments we're proud of
-- A live GPT-5.6 Sol call that reasons over real computed figures and refuses to invent — verified end-to-end on the web demo **and** in the shipping iOS/Android app.
+- A live GPT-5.6 Sol call that reasons over real computed figures and refuses to invent — verified end-to-end on the public web demo **and** in a native BRIK Coach integration inside the STAKD React Native application, verified in the iOS Simulator.
 - The Guardian override as a visible, first-class moment.
 - A submission that is exactly as honest as it is impressive.
 
@@ -55,7 +55,13 @@ Production multi-agent orchestration, scenario forecasting, and — only behind 
 ## Built with
 `openai` · `gpt-5.6-sol` · `responses-api` · `structured-outputs` · `supabase` · `edge-functions` · `vercel` · `react-native` · `expo` · `typescript` · `postgres` · `codex`
 
+## Submission details
+- **Track:** Apps for Your Life — Personal Finance
+- **Judge platform:** The primary judge-accessible platform is the public web demonstration at **https://brik.mystakd.com**. The native STAKD integration is additional implementation proof shown in the video and repository documentation.
+- **Before/after Build Week:** see the "What existed before / What we built during Build Week" section in the repo README, plus `BUILD_WEEK_CHANGELOG.md` and `CODEX_BUILD_LOG.md`.
+- *(Note: the public web Analyst uses the OpenAI Responses API with streamed text, not strict Structured Outputs. Strict Structured Outputs are used on the native Supabase `brik-explain` path.)*
+
 ## Links
 - **Live demo:** https://brik.mystakd.com  (also at https://brik-buildweek.vercel.app)
-- **Repo:** https://github.com/BeamLTD/STAKD  *(make public before submitting)*
-- **Video:** *(YouTube link — see VIDEO_SCRIPT.md)*
+- **Repo:** https://github.com/BeamLTD/brik-buildweek
+- **Video:** ⚠️ PLACEHOLDER — replace with the final public (logged-out-accessible) YouTube link before submitting. Script: VIDEO_SCRIPT.md

@@ -249,7 +249,7 @@
           </div>
           <div class="spacer"></div>
           <div class="coach"><span class="brikslot"></span><div><div class="tag">BRIK · Analyst</div><div class="q" id="whyQuote"></div></div></div>
-          <div id="genBadge" style="display:none;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:1px;color:#3FCF8E;border:1px solid rgba(63,207,142,.4);background:rgba(63,207,142,.1);border-radius:999px;padding:7px 12px;width:fit-content">● Generated live with OpenAI · GPT-5.6 Sol</div>
+          <div id="genBadge" style="display:none;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:1px;color:#3FCF8E;border:1px solid rgba(63,207,142,.4);background:rgba(63,207,142,.1);border-radius:999px;padding:7px 12px;width:fit-content">● Live Analyst result shown · run the live call in The Reasoning →</div>
         </section>
 
         <!-- 3 · SCENARIO LAB -->
@@ -257,7 +257,7 @@
           <div class="eyebrow">Step 03 · Where this goes</div>
           <div class="h1">Same income.<br>Two different futures.</div>
           <div class="card" style="margin-bottom:14px">
-            <div class="trend"><span class="lbl">Projected · 5 years</span><span class="sim">Estimated · simulated</span></div>
+            <div class="trend"><span class="lbl">Illustrative monthly scenario · not a forecast</span><span class="sim">Estimated · simulated</span></div>
             <svg viewBox="0 0 320 150" width="100%" height="150" preserveAspectRatio="none">
               <defs><linearGradient id="gap" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#16D6C5" stop-opacity=".28"/><stop offset="100%" stop-color="#16D6C5" stop-opacity="0"/></linearGradient></defs>
               <path id="gapFill" d="" fill="url(#gap)"/>
@@ -320,7 +320,7 @@
         <!-- 6 · THE CREW -->
         <section class="scr" data-s="5">
           <div class="eyebrow">Step 06 · The crew</div>
-          <div class="h1">Your crew ran<br>the numbers.</div>
+          <div class="h1">STAKD ran the numbers.<br>Your crew reviewed them.</div>
           <div class="mono" style="font-size:10.5px;letter-spacing:1.5px;color:#7fa39c;margin:-8px 0 16px">Analyst · Oracle · Strategist · Guardian · BRIK</div>
           <div id="crew">
             <div class="agent"><div class="bd"><div class="row"><span class="nm">ANALYST</span><span class="role">Explain</span></div><div class="say">&ldquo;Built rose $400, but Cuts rose $1,100, led by Family and Food.&rdquo;</div></div></div>
@@ -471,7 +471,8 @@ function toggleTask(el){
 
 /* ---------- 6 · crew reveal ----------
    LIVE: Analyst · Oracle · Strategist · Guardian return scoped structured responses,
-   reconciled by BRIK. Structured outputs per agent; orchestrated with the Agents SDK. */
+   reconciled by BRIK. Live Analyst via the Responses API; other roles + BRIK synthesis are
+   deterministic in this Build Week demo. Structured Outputs is the native Supabase path; Agents SDK is roadmap. */
 function initCrew(){
   const a=[...document.querySelectorAll('#crew .agent')];
   a.forEach((el,i)=>setTimeout(()=>el.classList.add('show'), reduce?0:180*i));

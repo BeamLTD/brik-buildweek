@@ -1,8 +1,10 @@
 # BRIK — Demo Video Script (2–3 min)
 
-Target: **2:30**. Screen-record the live site (https://brik-buildweek.vercel.app) — do a dry run so the live GPT call streams cleanly on camera. Keep your voice conversational; you're the builder, not a narrator.
+Target: **2:30**. Screen-record the live site (https://brik.mystakd.com) — do a dry run so the live GPT call streams cleanly on camera. Keep your voice conversational; you're the builder, not a narrator.
 
 Timing is a guide. `[SCREEN]` = what's shown, `[VO]` = what you say.
+
+**Do NOT say on camera:** all agents are live · production Agents SDK orchestration is running · the app is publicly shipping on iOS or Android · the 37.3% scenario is a projection/forecast. Record the branded URL (`brik.mystakd.com`), not the raw Vercel URL.
 
 ---
 
@@ -26,7 +28,7 @@ Timing is a guide. `[SCREEN]` = what's shown, `[VO]` = what you say.
 
 ### 1:45–2:10 · Architecture + Codex
 `[SCREEN]` **The Blueprint** (`/build.html`) — the pipeline and "OpenAI never calculates financial figures."
-`[VO]` "Under the hood: transactions flow into a deterministic Keep Engine, which builds an allowlisted context. Only that structured context goes to GPT-5.6 Sol. OpenAI never calculates a financial figure — STAKD is the source of truth. And we built the whole thing with Codex — the datasets, the native screens, the edge functions, the tests."
+`[VO]` "Under the hood: **STAKD calculates every financial figure deterministically. The public Analyst streams a live GPT-5.6 Sol explanation through the OpenAI Responses API. In the native STAKD integration, the Supabase function also enforces a strict output schema.** The Analyst is live — the other specialist roles and BRIK synthesis are deterministic in this Build Week demonstration. OpenAI never calculates a financial figure; STAKD is the source of truth. And we built it with Codex — the datasets, the native screens, the edge functions, the tests."
 
 ### 2:10–2:30 · Close
 `[SCREEN]` Back to the hub / thesis line.
