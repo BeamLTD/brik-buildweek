@@ -522,9 +522,9 @@
             </div>
           </div>
           <div class="weekmeter" id="weekmeter">
-            <span>Weekly moves selected</span>
+            <span>Weekly moves reviewed</span>
             <span class="track"><i id="weekfill"></i><span class="goal" style="left:100%"></span></span>
-            <span class="tnum">+<b id="weekpct" style="color:var(--keep)">0</b> pts</span>
+            <span class="tnum"><b id="weekpct" style="color:var(--keep)">0</b> / 3 reviewed</span>
           </div>
           <div class="goalnote" id="goalnote">Goal: 45% Monthly Keep Rate. Proposed moves do not guarantee a percentage change.</div>
         </div>
@@ -851,13 +851,10 @@ function toggleTask(el){
   el.classList.toggle('done');
   if(el.classList.contains('done')) toast('Demo — this would open <b>'+el.dataset.action+'</b> in STAKD');
   const tasks=[...document.querySelectorAll('.task')];
-  let pts=0; tasks.forEach(t=>{ if(t.classList.contains('done')) pts += (+t.dataset.effect)*(+t.dataset.conf); });
-  const liftPts=pts/DATA.month.built*100;           // confidence-weighted est pts
   const done=tasks.filter(t=>t.classList.contains('done')).length;
   document.getElementById('weekfill').style.width=(done/tasks.length*100)+'%';
-  document.getElementById('weekpct').textContent=liftPts.toFixed(0);
-  const goalGap=45-keepRate;
-  const hit=liftPts>=goalGap-0.5;
+  document.getElementById('weekpct').textContent=done;
+  const hit=done===tasks.length;
   document.getElementById('weekmeter').classList.toggle('hit',hit);
   const gn=document.getElementById('goalnote'); gn.classList.toggle('hit',hit);
   gn.textContent = hit
