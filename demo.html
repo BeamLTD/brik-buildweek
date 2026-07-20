@@ -1,0 +1,914 @@
+<title>BRIK — STAKD's AI Reasoning Layer</title>
+<!--
+  BRIK — the OpenAI reasoning layer on top of STAKD's existing deterministic Keep Engine.
+  ALL DATA IN THIS DEMO IS SYNTHETIC (persona: "Maya"). No live bank connection,
+  no autonomous money movement. Agent responses here are deterministic MOCKS;
+  inline // LIVE comments mark where OpenAI Responses API + Structured Outputs slot in.
+  Monthly Keep Rate = (Built - Cuts) / Built, displayed as a percentage, per local calendar month.
+-->
+<style>
+  :root{
+    color-scheme: dark;
+    --void:#08080B; --panel:#111119; --panel-2:#16161F; --line:#23232E;
+    --ink:#EDEDF4; --dim:#9A9AB0; --faint:#63637A;
+    /* teal = brand / BRIK / active nav / agent identity */
+    --teal:#16D6C5; --teal-dim:rgba(22,214,197,.12); --teal-line:rgba(22,214,197,.38);
+    /* keep-green = money retained + positive movement ONLY */
+    --keep:#3FCF8E; --keep-dim:rgba(63,207,142,.12);
+    /* cut-red = money out + risk */
+    --cut:#F0676B; --cut-dim:rgba(240,103,107,.12);
+    /* gold = earned recognition / accepted milestone / meaningful payoff ONLY */
+    --gold:#E8C572; --gold-dim:rgba(232,197,114,.12);
+    /* violet = Oracle / scenario detail ONLY */
+    --violet:#8B7BFF; --violet-dim:rgba(139,123,255,.14); --violet-line:rgba(139,123,255,.4);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,"Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1100px 700px at 80% -8%, rgba(22,214,197,.10), transparent 60%),
+      radial-gradient(900px 620px at 6% 108%, rgba(139,123,255,.08), transparent 55%),
+      var(--void);
+    color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased; line-height:1.5; min-height:100vh;
+  }
+  .mono{font-family:var(--mono)} .tnum{font-variant-numeric:tabular-nums}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--faint)}
+
+  /* ---------- BRIK character ---------- */
+  .brik{display:inline-block;line-height:0}
+  .brik svg{width:100%;height:100%;display:block;overflow:visible}
+  .bk-body{fill:#14141b;stroke:#2c2c38;stroke-width:2.4}
+  .bk-bevel{fill:#20202b}
+  .bk-top{fill:var(--teal);opacity:.85}
+  .brik .bk-deadpan,.brik .bk-hype,.brik .bk-think{opacity:0;transition:opacity .3s}
+  .brik[data-state="deadpan"] .bk-deadpan{opacity:1}
+  .brik[data-state="think"]   .bk-think{opacity:1}
+  .brik[data-state="hype"]    .bk-hype{opacity:1}
+  @keyframes bkbob{50%{transform:translateY(-4px)}}
+  .brik.bob svg{animation:bkbob 2.4s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.brik.bob svg{animation:none}}
+
+  /* ---------- Shell ---------- */
+  .wrap{max-width:1200px;margin:0 auto;padding:20px clamp(13px,3vw,30px) 60px}
+  .topbar{display:flex;align-items:center;gap:12px;padding:4px 2px 20px;flex-wrap:wrap}
+  .brikmark{width:36px;height:36px;flex:0 0 auto}
+  .wordmark{font-weight:800;letter-spacing:-.01em;font-size:19px}
+  .wordmark b{color:var(--teal)} .wordmark span{color:var(--faint);font-weight:600}
+  .demopill{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+    color:var(--gold);border:1px solid var(--gold-dim);border-color:rgba(232,197,114,.35);
+    border-radius:999px;padding:6px 11px;background:var(--gold-dim);text-transform:uppercase}
+  .demopill i{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;margin-right:6px;vertical-align:middle}
+  .layerpill{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);
+    border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.02)}
+  .layerpill b{color:var(--teal);font-weight:600}
+
+  .stage{display:grid;grid-template-columns:238px 1fr;gap:22px}
+  @media(max-width:860px){.stage{grid-template-columns:1fr}.rail{position:static;flex-direction:row;overflow-x:auto;-webkit-overflow-scrolling:touch}.rail .railfoot{display:none}}
+
+  /* ---------- Rail ---------- */
+  .rail{position:sticky;top:18px;align-self:start;display:flex;flex-direction:column;gap:4px;
+    background:linear-gradient(180deg,var(--panel),#0d0d13);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+  .step{display:flex;gap:11px;align-items:center;padding:9px 11px;border-radius:11px;cursor:pointer;
+    border:1px solid transparent;transition:.18s;color:var(--dim);text-align:left;background:none;width:100%;font-family:var(--sans);flex:0 0 auto}
+  .step:hover{background:rgba(255,255,255,.03);color:var(--ink)}
+  .step.on{background:var(--teal-dim);border-color:var(--teal-line);color:var(--ink)}
+  .step .n{font-family:var(--mono);font-size:11px;width:20px;height:20px;flex:0 0 auto;border-radius:6px;
+    display:grid;place-items:center;background:rgba(255,255,255,.05);color:var(--faint)}
+  .step.on .n{background:var(--teal);color:#04211e;font-weight:700}
+  .step .t{font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+  .step .s{display:block;font-size:11px;color:var(--faint);font-weight:500}
+  .railfoot{margin-top:6px;padding:11px;border-top:1px solid var(--line);font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.75}
+  .railfoot i{color:var(--teal);font-style:normal}
+
+  /* ---------- Scenes ---------- */
+  .scene{display:none;animation:rise .5s cubic-bezier(.2,.7,.2,1)}
+  .scene.on{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.scene{animation:none}}
+  .card{background:linear-gradient(180deg,var(--panel),#0e0e14);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card+.card{margin-top:14px}
+  h2.scene-h{font-size:clamp(23px,3.4vw,33px);font-weight:800;letter-spacing:-.02em;margin:2px 0 4px;text-wrap:balance}
+  .sub{color:var(--dim);font-size:14.5px;max-width:64ch;margin:0 0 18px}
+  .sub b{color:var(--ink);font-weight:600}
+  .btn{font-family:var(--sans);font-weight:700;font-size:14px;border-radius:11px;padding:12px 20px;cursor:pointer;border:1px solid transparent;transition:.16s}
+  .btn.primary{background:var(--teal);color:#04211e;box-shadow:0 8px 26px rgba(22,214,197,.22)}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(22,214,197,.30)}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--teal-line)}
+  .cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+
+  /* scene header w/ brik */
+  .withbrik{display:flex;gap:14px;align-items:flex-start}
+  .withbrik .brik{width:52px;height:52px;flex:0 0 auto;margin-top:4px}
+  @media(max-width:520px){.withbrik .brik{width:42px;height:42px}}
+
+  /* ---------- 1 · context ---------- */
+  .ctx{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:14px;background:rgba(255,255,255,.02);position:relative;opacity:.5;transition:.4s}
+  .tile.live{opacity:1;border-color:var(--teal-line)}
+  .tile .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .tile .v{font-size:14px;font-weight:700;margin-top:5px;letter-spacing:-.01em}
+  .tile .v small{color:var(--dim);font-weight:500;font-size:12.5px}
+  .tile .dot{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--faint);transition:.3s}
+  .tile.live .dot{background:var(--teal);box-shadow:0 0 0 4px var(--teal-dim)}
+  .agentline{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:14px;min-height:18px}
+  .agentline .pip{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  .enginecopy{font-size:13.5px;color:var(--dim);border-left:2px solid var(--teal-line);padding:2px 0 2px 14px;margin:0 0 4px}
+  .enginecopy b{color:var(--teal)}
+
+  /* ---------- 2 · you kept ---------- */
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:22px;align-items:center}
+  @media(max-width:720px){.hero{grid-template-columns:1fr}}
+  .bignum{font-weight:800;letter-spacing:-.04em;line-height:.92;font-size:clamp(52px,10vw,96px);
+    background:linear-gradient(160deg,#eafff6,var(--keep));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .bignum small{font-size:.34em;color:var(--dim);-webkit-text-fill-color:var(--dim);font-weight:700;letter-spacing:0}
+  .kr-line{font-size:16px;color:var(--ink);margin-top:10px}
+  .kr-line b{font-weight:800}
+  .delta{display:inline-flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:999px;margin-left:8px}
+  .delta.down{color:var(--cut);background:var(--cut-dim)}
+  .delta.up{color:var(--keep);background:var(--keep-dim)}
+  .formula{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:14px;line-height:1.6}
+  .formula b{color:var(--dim)}
+  .split{display:flex;height:22px;border-radius:7px;overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+  .split .k{background:linear-gradient(90deg,var(--keep),#0aa85f)}
+  .split .c{background:linear-gradient(90deg,#8f2c3c,var(--cut))}
+  .legend{display:flex;gap:16px;font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:8px;flex-wrap:wrap}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
+  .spark{width:100%;height:96px;display:block}
+  .statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .stat{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.02)}
+  .stat .v{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .stat .l{font-family:var(--mono);font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+
+  /* ---------- 3 · why ---------- */
+  .fromagent{font-family:var(--mono);font-size:11px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+  .fromagent .rec{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse .9s infinite}
+  .stream{font-size:15.5px;line-height:1.75;min-height:150px}
+  .stream .hl-cut{color:var(--cut);font-weight:600}
+  .stream .hl-keep{color:var(--keep);font-weight:600}
+  .stream .hl{color:var(--ink);font-weight:600}
+  .cursor{display:inline-block;width:9px;height:18px;background:var(--teal);vertical-align:-3px;margin-left:2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .trace{font-family:var(--mono);font-size:11px;margin-top:14px;display:inline-flex;align-items:center;gap:8px;padding:6px 11px;border-radius:8px;border:1px solid var(--line);color:var(--dim);letter-spacing:.04em}
+  .trace .d{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+  .trace.pending{color:var(--teal);border-color:rgba(22,214,197,.4)} .trace.pending .d{background:var(--teal);animation:pulse 1s infinite}
+  .trace.live{color:var(--keep);border-color:rgba(0,232,122,.45)} .trace.live .d{background:var(--keep);box-shadow:0 0 8px rgba(0,232,122,.7)}
+  .trace.sim{color:var(--gold);border-color:rgba(231,178,76,.4)} .trace.sim .d{background:var(--gold)}
+  .evrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;opacity:0;transition:.5s}
+  .evrow.show{opacity:1}
+  .chip{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-radius:8px;padding:7px 11px;background:rgba(255,255,255,.02);color:var(--dim)}
+  .chip b{color:var(--ink)}
+
+  /* ---------- 4 · scenario lab ---------- */
+  .scenario{display:grid;grid-template-columns:1fr 272px;gap:18px}
+  @media(max-width:720px){.scenario{grid-template-columns:1fr}}
+  .traj{width:100%;height:280px;display:block;border-radius:12px}
+  .ctrl label{font-family:var(--mono);font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;display:flex;justify-content:space-between}
+  .ctrl label b{color:var(--violet)}
+  input[type=range]{width:100%;accent-color:var(--violet);margin:8px 0 16px}
+  .proj{border:1px solid var(--violet-line);border-radius:12px;padding:14px;background:var(--violet-dim)}
+  .proj .big{font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--violet)}
+  .proj .lab{font-family:var(--mono);font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+  .proj .rng{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin-top:6px}
+  .assum{margin-top:14px;font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.7}
+  .assum b{color:var(--violet);text-transform:uppercase;letter-spacing:.08em}
+  .esttag{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);border:1px solid var(--violet-line);border-radius:6px;padding:3px 8px;margin-bottom:12px}
+
+  /* ---------- 5 · three moves ---------- */
+  .ivgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+  .iv{border:1px solid var(--line);border-radius:14px;padding:16px;background:linear-gradient(180deg,var(--panel-2),#0e0e14);display:flex;flex-direction:column}
+  .iv .rank{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase;margin-bottom:8px}
+  .iv h4{margin:0 0 7px;font-size:15.5px;letter-spacing:-.01em}
+  .iv .why{margin:0;color:var(--dim);font-size:13px;line-height:1.6}
+  .iv .row{display:flex;justify-content:space-between;align-items:baseline;margin-top:13px;gap:10px}
+  .iv .impact{font-family:var(--mono);font-size:12px;color:var(--keep)}
+  .iv .impact b{font-size:16px}
+  .iv .conf{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .iv .src{margin-top:9px;font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  .opens{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--teal);border:1px solid var(--teal-line);border-radius:8px;padding:8px 10px;background:var(--teal-dim);display:flex;align-items:center;gap:7px}
+  .note{font-size:12.5px;color:var(--faint);margin-top:14px;font-family:var(--mono);line-height:1.6}
+
+  /* ---------- 6 · guardian ---------- */
+  .gcrit{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+  .gcrit span{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:rgba(255,255,255,.02)}
+  .verdict{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:15px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+  .verdict+.verdict{margin-top:10px}
+  .verdict.modify{border-color:var(--cut-dim);border-color:rgba(255,77,106,.32);background:linear-gradient(180deg,var(--cut-dim),transparent)}
+  .verdict .vi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
+  .verdict.approve .vi{background:var(--keep-dim);color:var(--keep)}
+  .verdict.modify .vi{background:var(--cut-dim);color:var(--cut)}
+  .verdict .prop{font-weight:700;font-size:14px}
+  .verdict .reason{color:var(--dim);font-size:12.5px;margin-top:3px;line-height:1.55}
+  .verdict .badge{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;padding:5px 9px;border-radius:7px;white-space:nowrap}
+  .verdict.approve .badge{color:var(--keep);background:var(--keep-dim)}
+  .verdict.modify .badge{color:var(--cut);background:var(--cut-dim)}
+  .swing{font-family:var(--mono);font-size:12px;margin-top:6px}
+  .swing s{color:var(--cut);text-decoration-thickness:1px} .swing b{color:var(--ink)}
+
+  /* ---------- 7 · weekly plan ---------- */
+  .briksay{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+  .briksay .brik{width:56px;height:56px;flex:0 0 auto}
+  .bubble{background:var(--teal-dim);border:1px solid var(--teal-line);border-radius:14px;border-top-left-radius:4px;padding:14px 16px;font-size:15px;line-height:1.6}
+  .bubble b{color:var(--teal)}
+  .task{display:flex;gap:13px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);cursor:pointer;transition:.16s}
+  .task+.task{margin-top:9px}
+  .task:hover{border-color:var(--teal-line)}
+  .task .box{width:22px;height:22px;flex:0 0 auto;border-radius:7px;border:1.5px solid var(--faint);display:grid;place-items:center;margin-top:1px;transition:.16s}
+  .task.done .box{background:var(--keep);border-color:var(--keep)}
+  .task .box svg{opacity:0;transition:.16s} .task.done .box svg{opacity:1}
+  .task.done .tt{color:var(--faint);text-decoration:line-through}
+  .task .tt{font-weight:700;font-size:14.5px}
+  .task .td{color:var(--dim);font-size:12.5px;margin-top:2px}
+  .task .foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .task .by{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+  .task .act{font-family:var(--mono);font-size:10.5px;color:var(--teal);border:1px solid var(--teal-line);border-radius:6px;padding:3px 7px;background:var(--teal-dim)}
+  .weekmeter{display:flex;justify-content:space-between;align-items:center;margin-top:16px;font-family:var(--mono);font-size:12px;color:var(--dim);gap:10px}
+  .weekmeter .track{flex:1;height:7px;background:var(--line);border-radius:4px;overflow:hidden;position:relative}
+  .weekmeter .track i{display:block;height:100%;background:var(--keep);width:0;transition:width .4s}
+  .weekmeter .track .goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gold)}
+  .weekmeter.hit b{color:var(--gold)}
+  .goalnote{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:8px}
+  .goalnote.hit{color:var(--gold)}
+
+  /* ---------- 8 · stack ---------- */
+  .constel canvas{width:100%;height:320px;display:block}
+  .flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin-top:8px}
+  .flow .fnode{flex:1 1 130px;border:1px solid var(--line);border-radius:11px;padding:12px;background:rgba(255,255,255,.02);text-align:center;display:flex;flex-direction:column;justify-content:center;gap:4px}
+  .flow .fnode .fk{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+  .flow .fnode .fv{font-size:13px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
+  .flow .fnode.brik{border-color:var(--teal-line);background:var(--teal-dim)} .flow .fnode.brik .fv{color:var(--teal)}
+  .flow .fnode.act{border-color:var(--keep-dim);border-color:rgba(0,232,122,.3)} .flow .fnode.act .fv{color:var(--keep)}
+  .flow .arrow{align-self:center;color:var(--faint);font-family:var(--mono)}
+  @media(max-width:640px){.flow .arrow{display:none}}
+  .thesis{margin-top:16px;border:1px solid var(--teal-line);border-radius:14px;padding:20px;background:linear-gradient(180deg,var(--teal-dim),transparent);text-align:center}
+  .thesis p{margin:0;font-size:clamp(16px,2.6vw,21px);font-weight:800;letter-spacing:-.01em;line-height:1.45}
+  .thesis .a{color:var(--teal)}
+  .footnote{margin-top:22px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.85}
+  .footnote b{color:var(--dim)}
+
+  /* boot */
+  .boot{position:fixed;inset:0;background:var(--void);z-index:50;display:grid;place-items:center;transition:opacity .6s;padding:20px}
+  .boot.gone{opacity:0;pointer-events:none}
+  .boot .inner{text-align:center;max-width:480px;width:100%}
+  .boot .brik{width:64px;height:64px;margin:0 auto}
+  .boot .os{font-family:var(--mono);font-size:11.5px;letter-spacing:.26em;color:var(--teal);text-transform:uppercase;margin-top:16px}
+  .boot h1{font-size:clamp(30px,7vw,50px);font-weight:800;letter-spacing:-.03em;margin:8px 0 2px}
+  .boot h1 b{color:var(--teal)}
+  .boot .sub2{color:var(--dim);font-size:13.5px;margin:0}
+  .boot .log{font-family:var(--mono);font-size:12px;color:var(--dim);text-align:left;line-height:1.9;margin:20px auto 0;min-height:132px}
+  .boot .log .ok{color:var(--keep)} .boot .log .a{color:var(--teal)}
+  .boot .go{margin-top:18px;opacity:0;transition:.5s}.boot .go.show{opacity:1}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2);border:1px solid var(--teal-line);color:var(--ink);
+    font-family:var(--mono);font-size:12.5px;padding:11px 16px;border-radius:11px;opacity:0;
+    transition:.3s;z-index:60;box-shadow:0 12px 34px rgba(0,0,0,.5)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast b{color:var(--teal)}
+</style>
+
+<!-- ===== BRIK character template (injected by JS into [data-brik]) ===== -->
+<template id="brikT">
+  <svg viewBox="0 0 120 120" aria-hidden="true">
+    <ellipse cx="60" cy="107" rx="30" ry="5" fill="rgba(0,0,0,.55)"/>
+    <path class="bk-body" d="M40 15 H80 L105 40 V80 L80 105 H40 L15 80 V40 Z"/>
+    <path class="bk-bevel" d="M40 15 H80 L105 40 H92 L72 22 H48 L28 40 H15 Z"/>
+    <rect class="bk-top" x="43" y="23" width="34" height="5" rx="2.5"/>
+    <!-- deadpan -->
+    <g class="bk-deadpan">
+      <rect x="43" y="57" width="11" height="8" rx="4" fill="#16D6C5"/>
+      <rect x="66" y="57" width="11" height="8" rx="4" fill="#16D6C5"/>
+    </g>
+    <!-- thinking (eyes glance up) -->
+    <g class="bk-think">
+      <circle cx="49" cy="55" r="6" fill="#16D6C5"/><circle cx="71" cy="55" r="6" fill="#16D6C5"/>
+      <circle cx="50.5" cy="53" r="2" fill="#0b0b10"/><circle cx="72.5" cy="53" r="2" fill="#0b0b10"/>
+    </g>
+    <!-- hype -->
+    <g class="bk-hype">
+      <path d="M41 47 q8 -6 15 -1" fill="none" stroke="#16D6C5" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M64 46 q8 -5 15 1" fill="none" stroke="#16D6C5" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="49" cy="58" r="8.5" fill="#16D6C5"/><circle cx="71" cy="58" r="8.5" fill="#16D6C5"/>
+      <circle cx="46" cy="55" r="2.4" fill="#eafff9"/><circle cx="68" cy="55" r="2.4" fill="#eafff9"/>
+      <path d="M51 76 q9 8 18 0" fill="none" stroke="#16D6C5" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </svg>
+</template>
+
+<div class="boot" id="boot">
+  <div class="inner">
+    <span class="brik bob" data-brik data-state="deadpan"></span>
+    <div class="os">STAKD · AI reasoning layer</div>
+    <h1><b>BRIK</b></h1>
+    <p class="sub2">The Keep Engine calculates the numbers. BRIK reasons over them.</p>
+    <div class="log mono" id="bootlog"></div>
+    <div class="go" id="bootgo"><button class="btn primary" onclick="dismissBoot()">Enter STAKD →</button></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="topbar">
+    <span class="brikmark brik" data-brik data-state="deadpan"></span>
+    <div class="wordmark">STAKD <span>·</span> <b>BRIK</b> <span>layer</span></div>
+    <div class="demopill" style="margin-left:auto;color:#3FCF8E;border-color:rgba(63,207,142,.4);background:rgba(63,207,142,.1)"><i style="background:#3FCF8E"></i>Live · GPT-5.6 Sol</div>
+    <div class="demopill" style="margin-left:8px"><i></i>Demo data · synthetic</div>
+    <div class="layerpill">reasoning by <b>GPT-5.6 Sol</b> · math by STAKD</div>
+  </div>
+
+  <div class="stage">
+    <nav class="rail" id="rail">
+      <button class="step on" data-go="0"><span class="n">1</span><span class="t">Context<span class="s">load Maya</span></span></button>
+      <button class="step" data-go="1"><span class="n">2</span><span class="t">You Kept<span class="s">this month</span></span></button>
+      <button class="step" data-go="2"><span class="n">3</span><span class="t">Ask BRIK Why<span class="s">the Analyst</span></span></button>
+      <button class="step" data-go="3"><span class="n">4</span><span class="t">Scenario Lab<span class="s">model the path</span></span></button>
+      <button class="step" data-go="4"><span class="n">5</span><span class="t">Three Moves<span class="s">the Strategist</span></span></button>
+      <button class="step" data-go="5"><span class="n">6</span><span class="t">Guardian Review<span class="s">the risk gate</span></span></button>
+      <button class="step" data-go="6"><span class="n">7</span><span class="t">Weekly Plan<span class="s">BRIK reconciles</span></span></button>
+      <button class="step" data-go="7"><span class="n">8</span><span class="t">The Stack<span class="s">how it fits</span></span></button>
+      <div class="railfoot">MATH <i>STAKD Keep Engine</i><br>REASONING <i>GPT-5.6 Sol · structured</i><br>DATA <i>synthetic · on-device</i></div>
+    </nav>
+
+    <main>
+      <!-- 1 CONTEXT -->
+      <section class="scene on" data-scene="0">
+        <div class="eyebrow">Step 01 — Context</div>
+        <div class="withbrik">
+          <span class="brik" data-brik data-state="deadpan"></span>
+          <div>
+            <h2 class="scene-h">Load Maya's STAKD context</h2>
+            <p class="sub">Maya logs her Staks and Cuts in STAKD by hand. There's no bank connection — the app already holds a clean, structured picture of her money.</p>
+          </div>
+        </div>
+        <div class="card">
+          <p class="enginecopy">The <b>Keep Engine</b> calculates the numbers. The agents reason over those numbers.</p>
+          <div class="ctx" id="ctx" style="margin-top:14px">
+            <div class="tile" data-tile><div class="k">History</div><div class="v">6 local calendar months</div><div class="dot"></div></div>
+            <div class="tile" data-tile><div class="k">Ventures</div><div class="v">2 active <small>· Northstar Studio, Maya Creative</small></div><div class="dot"></div></div>
+            <div class="tile" data-tile><div class="k">Current goal</div><div class="v">45% Monthly Keep Rate</div><div class="dot"></div></div>
+            <div class="tile" data-tile><div class="k">This month's ledger</div><div class="v tnum">Built $5,400 <small>· Cuts $3,600</small></div><div class="dot"></div></div>
+            <div class="tile" data-tile><div class="k">Keep Engine</div><div class="v">Context pack <small>· deterministic ✓</small></div><div class="dot"></div></div>
+            <div class="tile" data-tile><div class="k">Agents</div><div class="v">Analyst · Oracle · Strategist · Guardian</div><div class="dot"></div></div>
+          </div>
+          <div class="cta-row">
+            <button class="btn primary" id="loadBtn" onclick="runLoad()">Load Maya's context</button>
+            <button class="btn ghost" onclick="go(1)">Skip →</button>
+          </div>
+          <div class="agentline" id="loadLog"></div>
+        </div>
+      </section>
+
+      <!-- 2 YOU KEPT -->
+      <section class="scene" data-scene="1">
+        <div class="eyebrow">Step 02 — <span id="krMonthEy">This month</span></div>
+        <h2 class="scene-h">You Kept</h2>
+        <p class="sub">Not what Maya earned — what she <b>kept</b>. STAKD's Keep Engine computes it for the current calendar month, transfers excluded.</p>
+        <div class="card">
+          <div class="hero">
+            <div>
+              <div class="bignum tnum"><small>$</small><span id="keptNum">0</span></div>
+              <div class="kr-line">kept in <b id="krMonth">this month</b> · <b class="tnum"><span id="krPct">0</span>% Monthly Keep Rate</b><span class="delta down" id="krDelta">▼ 0 pts</span></div>
+              <div class="formula">Monthly Keep Rate = (Built − Cuts) ÷ Built<br><b>= ($5,400 − $3,600) ÷ $5,400 = 33.3%</b> · displayed as a percentage · transfers excluded</div>
+              <div class="split" style="margin-top:16px"><div class="k" id="splitK" style="width:33.3%"></div><div class="c" style="width:66.7%"></div></div>
+              <div class="legend"><span><i style="background:var(--keep)"></i>Kept · $1,800</span><span><i style="background:var(--cut)"></i>Cuts · $3,600</span><span><i style="background:var(--dim)"></i>Built · $5,400</span></div>
+            </div>
+            <div>
+              <div class="eyebrow" style="margin-bottom:6px">Monthly Keep Rate · last 6 months</div>
+              <svg class="spark" id="spark" viewBox="0 0 320 96" preserveAspectRatio="none"></svg>
+              <div class="statrow">
+                <div class="stat"><div class="v tnum" style="color:var(--dim)">$5,400</div><div class="l">Built</div></div>
+                <div class="stat"><div class="v tnum" style="color:var(--cut)">$3,600</div><div class="l">Cuts</div></div>
+                <div class="stat"><div class="v tnum" style="color:var(--keep)">$1,800</div><div class="l">Kept</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn primary" onclick="go(2)">Ask BRIK why it moved →</button></div>
+      </section>
+
+      <!-- 3 WHY -->
+      <section class="scene" data-scene="2">
+        <div class="eyebrow">Step 03 — Explain</div>
+        <div class="withbrik">
+          <span class="brik" data-brik data-state="think"></span>
+          <div>
+            <h2 class="scene-h">Ask BRIK why</h2>
+            <p class="sub">The <b>Analyst</b> reads the structured context and explains the change in plain language — every figure comes from Maya's own logged data.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="fromagent"><span class="rec"></span>Analyst · reasoning over the context pack</div>
+          <div class="stream" id="stream"></div>
+          <div class="trace" id="trace" style="margin-bottom:2px"><span class="d"></span>gpt-5.6-sol · idle</div>
+          <div class="evrow" id="evrow">
+            <span class="chip">Built <b>+$400</b> MoM</span>
+            <span class="chip">Family Cuts <b>+$470</b></span>
+            <span class="chip">Food Cuts <b>+$420</b></span>
+            <span class="chip">biggest Cut <b>August Rent Reserve $1,550</b></span>
+            <span class="chip">confidence <b>0.88</b></span>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#3FCF8E;border:1px solid rgba(63,207,142,.4);background:rgba(63,207,142,.1);border-radius:999px;padding:7px 12px">● Generated live with OpenAI · GPT-5.6 Sol</div>
+          <div class="cta-row"><button class="btn ghost" onclick="askWhy()">↻ Ask again</button><button class="btn primary" onclick="go(3)">Model the path →</button></div>
+        </div>
+      </section>
+
+      <!-- 4 SCENARIO LAB -->
+      <section class="scene" data-scene="3">
+        <div class="eyebrow">Step 04 — Model</div>
+        <h2 class="scene-h">Scenario Lab</h2>
+        <p class="sub">The <b style="color:var(--violet)">Oracle</b> presents simple scenario estimates from Maya's verified six-month history—not production Monte Carlo.</p>
+        <div class="card">
+          <span class="esttag">◆ Estimated scenario — not a prediction</span>
+          <div class="scenario">
+            <canvas class="traj" id="traj" width="640" height="280"></canvas>
+            <div class="ctrl">
+              <label>Scenario Monthly Keep Rate <b><span id="krTarget">37.3</span>%</b></label>
+              <input type="range" id="krSlider" min="33.3" max="45" step="0.1" value="37.3">
+              <div class="proj">
+                <div class="lab">Illustrative scenario · <span id="projYear">not a forecast</span></div>
+                <div class="big tnum" id="projNum">$0</div>
+                <div class="rng" id="projRange">range —</div>
+                <div class="rng" id="projDelta" style="color:var(--violet)"></div>
+              </div>
+              <div class="assum">
+                <b>Assumptions</b><br>
+                • current Monthly Keep Rate: 33.3%<br>
+                • previous Monthly Keep Rate: 50.0%<br>
+                • illustrative eased-Cuts scenario: 37.3%<br>
+                • goal: 45% Monthly Keep Rate
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn primary" onclick="go(4)">What moves get there? →</button></div>
+      </section>
+
+      <!-- 5 THREE MOVES -->
+      <section class="scene" data-scene="4">
+        <div class="eyebrow">Step 05 — Propose</div>
+        <h2 class="scene-h">Three moves</h2>
+        <p class="sub">The <b>Strategist</b> ranks moves by estimated dollars kept — and each one maps to a real STAKD action Maya taps herself. Nothing here moves money on its own.</p>
+        <div class="ivgrid" id="ivgrid"></div>
+        <p class="note">Strategist proposes. Guardian reviews next — BRIK never cancels a subscription, sweeps funds, or moves money automatically. It opens the right STAKD screen and Maya decides.</p>
+        <div class="cta-row"><button class="btn primary" onclick="go(5)">Send to Guardian →</button></div>
+      </section>
+
+      <!-- 6 GUARDIAN -->
+      <section class="scene" data-scene="5">
+        <div class="eyebrow">Step 06 — Review</div>
+        <div class="withbrik">
+          <span class="brik" data-brik data-state="deadpan"></span>
+          <div>
+            <h2 class="scene-h">Guardian review</h2>
+            <p class="sub">Before anything reaches Maya, the <b>Guardian</b> checks each proposal against her real constraints — and it can modify or reject the Strategist.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="gcrit">
+            <span>essential expenses</span><span>income volatility</span><span>cash-flow timing</span><span>Venture exposure</span><span>overdraft risk</span>
+          </div>
+          <div class="verdict approve">
+            <div class="vi">✓</div>
+            <div><div class="prop">Check the 45% Monthly Keep Rate goal</div><div class="reason">Review-only and user-triggered. Approved as proposed.</div></div>
+            <div class="badge">APPROVED</div>
+          </div>
+          <div class="verdict approve">
+            <div class="vi">✓</div>
+            <div><div class="prop">Review Family Cuts</div><div class="reason">Maya chooses any adjustment. Approved as proposed.</div></div>
+            <div class="badge">APPROVED</div>
+          </div>
+          <div class="verdict modify">
+            <div class="vi">±</div>
+            <div>
+              <div class="prop">Protect part of the next Maya Creative payout</div>
+              <div class="reason">Maya's Venture income varies and housing and family obligations are upcoming. Guardian reduces the proposed set-aside.</div>
+              <div class="swing"><s>30%</s> &nbsp;→&nbsp; <b>22%</b></div>
+            </div>
+            <div class="badge">MODIFIED</div>
+          </div>
+        </div>
+        <div class="cta-row"><button class="btn primary" onclick="go(6)">See BRIK's plan →</button></div>
+      </section>
+
+      <!-- 7 WEEKLY PLAN -->
+      <section class="scene" data-scene="6">
+        <div class="eyebrow">Step 07 — Reconcile</div>
+        <h2 class="scene-h">BRIK's weekly plan</h2>
+        <div class="card">
+          <div class="briksay">
+            <span class="brik bob" data-brik data-state="hype"></span>
+            <div class="bubble">Thirty percent was too aggressive for this week. We're starting at <b>twenty-two</b> so you can build without putting next Friday at risk. Three moves — all yours to tap.</div>
+          </div>
+          <div id="tasks">
+            <div class="task" data-effect="0" data-conf="0.84" data-action="SetGoal" onclick="toggleTask(this)">
+              <div class="box"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-6" stroke="#04160c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><div class="tt">Check the 45% Monthly Keep Rate goal</div><div class="td">Review it against Maya's current obligations.</div>
+                <div class="foot"><span class="by">▸ from Strategist</span><span class="act">opens SetGoal</span></div></div>
+            </div>
+            <div class="task" data-effect="0" data-conf="0.79" data-action="CreateCut" onclick="toggleTask(this)">
+              <div class="box"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-6" stroke="#04160c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><div class="tt">Review Family Cuts</div><div class="td">Choose one practical adjustment; nothing is cancelled automatically.</div>
+                <div class="foot"><span class="by">▸ from Strategist</span><span class="act">opens CreateCut</span></div></div>
+            </div>
+            <div class="task" data-effect="0" data-conf="0.72" data-action="CreateStak" onclick="toggleTask(this)">
+              <div class="box"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 6l3 3 5-6" stroke="#04160c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div><div class="tt">Protect 22% of the next Maya Creative payout</div><div class="td">Guardian-capped proposed move for the variable Venture.</div>
+                <div class="foot"><span class="by">▸ from BRIK</span><span class="act">opens CreateStak</span></div></div>
+            </div>
+          </div>
+          <div class="weekmeter" id="weekmeter">
+            <span>Weekly moves selected</span>
+            <span class="track"><i id="weekfill"></i><span class="goal" style="left:100%"></span></span>
+            <span class="tnum">+<b id="weekpct" style="color:var(--keep)">0</b> pts</span>
+          </div>
+          <div class="goalnote" id="goalnote">Goal: 45% Monthly Keep Rate. Proposed moves do not guarantee a percentage change.</div>
+        </div>
+        <div class="cta-row"><button class="btn primary" onclick="go(7)">How it all fits →</button></div>
+      </section>
+
+      <!-- 8 THE STACK -->
+      <section class="scene" data-scene="7">
+        <div class="eyebrow">Step 08 — Architecture</div>
+        <h2 class="scene-h">How BRIK fits STAKD</h2>
+        <p class="sub">Four agents, each a different lens on the same deterministic context; <b style="color:var(--teal)">BRIK</b> reconciles them into moves that open real STAKD actions.</p>
+        <div class="card">
+          <div class="constel"><canvas id="constel" width="720" height="320"></canvas></div>
+          <div class="flow">
+            <div class="fnode"><div class="fk">1 · math</div><div class="fv">STAKD Keep Engine</div></div>
+            <span class="arrow">→</span>
+            <div class="fnode"><div class="fk">2 · structure</div><div class="fv">Money Context</div></div>
+            <span class="arrow">→</span>
+            <div class="fnode"><div class="fk">3 · reason</div><div class="fv">Analyst · Oracle<br>Strategist · Guardian</div></div>
+            <span class="arrow">→</span>
+            <div class="fnode brik"><div class="fk">4 · communicate</div><div class="fv">BRIK synthesis</div></div>
+            <span class="arrow">→</span>
+            <div class="fnode act"><div class="fk">5 · act</div><div class="fv">Real STAKD action</div></div>
+          </div>
+          <div class="thesis">
+            <p><span class="a">STAKD</span> calculates the truth.<br><span class="a">OpenAI</span> reasons over the truth.<br><span class="a">BRIK</span> communicates the truth.</p>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <div class="eyebrow" style="margin-bottom:12px">What is real today</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px">
+            <div>
+              <div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3FCF8E;margin-bottom:8px">● Live today</div>
+              <div style="font-size:13px;color:var(--dim);line-height:1.95">✓ Native STAKD integration<br>✓ GPT-5.6 Sol Analyst reasoning<br>✓ OpenAI Responses API<br>✓ Supabase Edge Functions<br>✓ Deterministic Keep Engine<br>✓ Semantic action routing<br>✓ Guardian disagreement logic</div>
+            </div>
+            <div>
+              <div style="font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Illustrative / roadmap</div>
+              <div style="font-size:13px;color:var(--dim);line-height:1.95">• Production multi-agent orchestration<br>• Monte Carlo forecasting<br>• Autonomous financial actions<br>• Live banking integrations</div>
+            </div>
+          </div>
+        </div>
+        <div class="footnote">
+          <b>Build Week addition = the OpenAI reasoning layer</b> on top of STAKD's existing deterministic engine.<br>
+          No new bank aggregation, no automatic money movement, no autonomous account control.<br>
+          <span style="color:var(--faint)">All data synthetic (persona: Maya). Analyst explanations are generated live using GPT-5.6 Sol (OpenAI Responses API · Structured Outputs); Oracle, Strategist, Guardian &amp; BRIK synthesis remain deterministic for this Build Week demonstration.</span>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+/* ---------- inject BRIK character ---------- */
+const brikMarkup = document.getElementById('brikT').innerHTML;
+document.querySelectorAll('[data-brik]').forEach(el=>{ el.innerHTML = brikMarkup; });
+
+/* ================================================================
+   SYNTHETIC DATA — persona "Maya". Single source of truth so all
+   displayed math stays internally consistent.
+   Monthly Keep Rate = (Built - Cuts) / Built, displayed as a percentage.
+   ================================================================ */
+const DATA = {
+  month:      { built:5400, cuts:3600 },
+  prevMonth:  { built:5000, cuts:2500 },
+  krSeries:   [49.6,50.6,47.9,51.5,50.0,33.3],
+  payoutAvg:  1200,
+};
+const kept      = DATA.month.built - DATA.month.cuts;       // 1800
+const keepRate  = kept / DATA.month.built * 100;            // 33.3
+const prevKept  = DATA.prevMonth.built - DATA.prevMonth.cuts; // 6319
+const prevKR    = prevKept / DATA.prevMonth.built * 100;    // 71.0
+const krDelta   = keepRate - prevKR;                        // -7.0
+
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const now = new Date();
+const curMonthName  = MONTHS[now.getMonth()] + ' ' + now.getFullYear();
+const prevMonthName = MONTHS[(now.getMonth()+11)%12];
+const projYear = now.getFullYear() + 10;
+
+/* ---------- boot ---------- */
+const bootLines = [
+  ['initializing STAKD Keep Engine ...','a'],
+  ['loading Maya · 6 months · 1,240 entries ..... <ok>ok</ok>',''],
+  ['computing Monthly Keep Rate ................. <ok>ok</ok>',''],
+  ['building structured money context .......... <ok>ok</ok>',''],
+  ['waking Analyst · Oracle · Strategist · Guardian <ok>online</ok>',''],
+  ['BRIK online. reasoning layer ready.','a'],
+];
+const blog=document.getElementById('bootlog'); let bi=0;
+function bootTick(){
+  if(bi>=bootLines.length){ document.getElementById('bootgo').classList.add('show'); return; }
+  const [txt,cls]=bootLines[bi++]; const div=document.createElement('div');
+  if(cls) div.className=cls;
+  div.innerHTML=txt.replace(/<ok>/g,'<span class="ok">').replace(/<\/ok>/g,'</span>');
+  blog.appendChild(div); setTimeout(bootTick, reduce?60:260);
+}
+bootTick();
+if(reduce){ setTimeout(()=>document.getElementById('bootgo').classList.add('show'),300); }
+function dismissBoot(){ document.getElementById('boot').classList.add('gone'); go(0); }
+
+/* ---------- nav ---------- */
+const scenes=[...document.querySelectorAll('.scene')];
+const steps=[...document.querySelectorAll('.step')];
+let cur=-1;
+function go(n){
+  if(n===cur) return; cur=n;
+  scenes.forEach(s=>s.classList.toggle('on', +s.dataset.scene===n));
+  steps.forEach(s=>s.classList.toggle('on', +s.dataset.go===n));
+  if(n===1) animKept();
+  if(n===2) askWhy();
+  if(n===3) drawTraj(+document.getElementById('krSlider').value);
+  if(n===7) startConstel();
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+}
+steps.forEach(s=>s.addEventListener('click',()=>go(+s.dataset.go)));
+
+/* ---------- toast ---------- */
+let toastTimer=null;
+function toast(html){
+  const t=document.getElementById('toast'); t.innerHTML=html; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ---------- 1 · load context ---------- */
+function runLoad(){
+  const tiles=[...document.querySelectorAll('[data-tile]')];
+  const log=document.getElementById('loadLog');
+  document.getElementById('loadBtn').textContent='Loading…';
+  tiles.forEach((t,i)=>setTimeout(()=>t.classList.add('live'), reduce?0:170*i));
+  const msgs=['reading 6 months of Staks & Cuts…','computing Monthly Keep Rate for '+curMonthName+'…','building structured money context…','waking Analyst · Oracle · Strategist · Guardian…','context ready ✓'];
+  log.innerHTML='<span class="pip"></span><span></span>'; let mi=0;
+  const iv=setInterval(()=>{
+    log.querySelector('span:last-child').textContent=msgs[mi++]||'';
+    if(mi>=msgs.length){ clearInterval(iv);
+      document.getElementById('loadBtn').textContent='Context loaded ✓';
+      document.getElementById('loadBtn').style.opacity=.6;
+      setTimeout(()=>go(1),700);
+    }
+  }, reduce?180:520);
+}
+
+/* ---------- 2 · you kept ---------- */
+document.getElementById('krMonth').textContent=curMonthName;
+document.getElementById('krMonthEy').textContent=curMonthName;
+document.getElementById('krDelta').innerHTML=(krDelta<0?'▼ ':'▲ ')+Math.abs(krDelta).toFixed(0)+' pts vs '+prevMonthName;
+document.getElementById('krDelta').className='delta '+(krDelta<0?'down':'up');
+document.getElementById('splitK').style.width=keepRate.toFixed(1)+'%';
+let keptDone=false;
+function animKept(){
+  drawSpark();
+  if(keptDone) return; keptDone=true;
+  const num=document.getElementById('keptNum'), pct=document.getElementById('krPct');
+  let v=0; const iv=setInterval(()=>{ v+=Math.max(90,Math.round((kept-v)/6)); if(v>=kept){v=kept;clearInterval(iv);} num.textContent=v.toLocaleString(); pct.textContent=(v/kept*keepRate).toFixed(0); }, reduce?200:32);
+}
+function drawSpark(){
+  const svg=document.getElementById('spark'); if(svg.dataset.done) return; svg.dataset.done=1;
+  const d=DATA.krSeries, W=320,H=96,pad=6, max=76,min=58;
+  const pts=d.map((y,i)=>[pad+i*(W-2*pad)/(d.length-1), H-pad-((y-min)/(max-min))*(H-2*pad)]);
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=line+`L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H} Z`;
+  // last segment dips — draw whole line teal, endpoint red to flag the drop (risk)
+  svg.innerHTML=`<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16D6C5" stop-opacity=".32"/><stop offset="1" stop-color="#16D6C5" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#sg)"/><path d="${line}" fill="none" stroke="#16D6C5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${pts[pts.length-1][0].toFixed(1)}" cy="${pts[pts.length-1][1].toFixed(1)}" r="3.6" fill="#F0676B"/>`;
+}
+
+/* ---------- 3 · Ask BRIK Why — LIVE GPT-5.6 Sol (Responses API, streamed) ----------
+   Calls the BRIK server (server/server.mjs), which holds the OpenAI key server-side
+   and streams GPT-5.6 Sol over the Responses API. The model reasons ONLY over the verified
+   numbers the Keep Engine computed (contextPack) — it never invents a figure. A live
+   trace (mode · model · response-id · tokens · latency) is shown. If the server isn't
+   running (bare file / published artifact), it falls back to a clearly-labelled mock. */
+const MODEL_LABEL='gpt-5.6-sol';
+const storyHTML =
+`Maya's income went <span class="hl-keep">up</span> this month — Built rose from <span class="hl">$5,000</span> to <span class="hl">$5,400</span>. So keeping less isn't about earning less.
+
+Cuts rose <span class="hl-cut">$1,100</span>. Family rose <span class="hl-cut">$470</span> (from $250 to $720), and Food rose <span class="hl-cut">$420</span> (from $500 to $920).
+
+Housing is the biggest Cut at <span class="hl">$1,550</span>. Monthly Keep Rate is 33.3%, down 16.7 points from 50.0%, against a 45% goal. Confidence: 0.88.`;
+
+// The verified numbers the Keep Engine hands the model. The model may not alter these.
+function contextPack(){
+  return {
+    metric:'Monthly Keep Rate = (Built - Cuts) / Built · displayed as a percentage · transfers excluded',
+    month:{ name:curMonthName, built:DATA.month.built, cuts:DATA.month.cuts, kept, keep_rate:+keepRate.toFixed(1) },
+    previous_month:{ name:prevMonthName, built:DATA.prevMonth.built, cuts:DATA.prevMonth.cuts, kept:prevKept, keep_rate:+prevKR.toFixed(1) },
+    keep_rate_delta_pts:+krDelta.toFixed(1),
+    cut_categories_usd:{
+      this_month:{ housing:1550, food:920, family:720, insurance:240, travel:170 },
+      previous_month:{ housing:1450, food:500, family:250, insurance:200, travel:100 }
+    },
+    biggest_cut:{ category:'housing', usd:1550 },
+    goal:'45% Monthly Keep Rate'
+  };
+}
+function traceSet(cls,html){ const t=document.getElementById('trace'); if(!t) return; t.className='trace '+cls; t.innerHTML='<span class="d"></span>'+html; }
+
+// live-first; falls back to the deterministic mock if no server is reachable
+async function askWhy(){
+  const el=document.getElementById('stream'), ev=document.getElementById('evrow');
+  ev.classList.remove('show'); el.innerHTML=''; traceSet('pending','contacting '+MODEL_LABEL+' …');
+  try{
+    const resp=await fetch('/api/analyst',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:contextPack()})});
+    if(!resp.ok||!resp.body) throw new Error('server unavailable');
+    el.innerHTML='<span class="cursor"></span>'; const cur=el.querySelector('.cursor');
+    const reader=resp.body.getReader(), dec=new TextDecoder(); let buf='', meta=null;
+    for(;;){
+      const {value,done}=await reader.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true}); let i;
+      while((i=buf.indexOf('\n\n'))>=0){
+        const line=buf.slice(0,i).trim(); buf=buf.slice(i+2);
+        if(!line.startsWith('data:')) continue;
+        const m=JSON.parse(line.slice(5).trim());
+        if(m.type==='meta'){ meta=m; }
+        else if(m.type==='delta'){ cur.before(document.createTextNode(m.text)); }
+        else if(m.type==='error'){ throw new Error(m.message); }
+        else if(m.type==='done'){
+          cur.remove(); ev.classList.add('show');
+          const live=(meta && meta.mode==='live');
+          const id=(meta&&meta.id)||'resp_…', tok=(m.tokens!=null)?(' · '+m.tokens+' tok'):'';
+          traceSet(live?'live':'sim',(live?'LIVE · ':'SIMULATED · ')+((meta&&meta.model)||MODEL_LABEL)+' · '+id+tok+' · '+m.ms+'ms');
+        }
+      }
+    }
+  }catch(e){ fallbackMock(); }
+}
+
+// deterministic fallback (no server) — clearly labelled
+function fallbackMock(){
+  const el=document.getElementById('stream'), ev=document.getElementById('evrow');
+  ev.classList.remove('show'); el.innerHTML='';
+  traceSet('sim','SIMULATED · offline — run the BRIK server for a live '+MODEL_LABEL+' call');
+  if(reduce){ el.innerHTML=storyHTML; ev.classList.add('show'); return; }
+  const tmp=document.createElement('div'); tmp.innerHTML=storyHTML;
+  const nodes=[...tmp.childNodes]; el.innerHTML='<span class="cursor"></span>'; let ni=0;
+  function nextNode(){
+    if(ni>=nodes.length){ el.querySelector('.cursor')?.remove(); ev.classList.add('show'); return; }
+    const node=nodes[ni++];
+    if(node.nodeType===3){ typeText(node.textContent, nextNode); }
+    else { const span=document.createElement('span'); span.className=node.className||'';
+      el.querySelector('.cursor').before(span); typeInto(span,node.textContent,nextNode); }
+  }
+  function typeText(txt,done){ let i=0; const c=el.querySelector('.cursor');
+    (function t(){ if(i<txt.length){ c.before(document.createTextNode(txt[i++])); setTimeout(t, txt[i-1]==='\n'?55:13);} else done(); })(); }
+  function typeInto(span,txt,done){ let i=0; (function t(){ if(i<txt.length){ span.textContent+=txt[i++]; setTimeout(t,16);} else done(); })(); }
+  nextNode();
+}
+
+/* ---------- 4 · Scenario Lab ----------
+   Simple, honest illustration — NOT a Monte Carlo and NOT a forecast. It shows the
+   arithmetic only: at a chosen Monthly Keep Rate, how many dollars Maya keeps per month
+   and cumulatively over the next 12 months, versus staying at today's rate. All off her
+   verified Built ($5,400/mo). No income growth, no returns, no probability bands. */
+const trajCanvas=document.getElementById('traj');
+const SCN_INCOME=DATA.month.built;             // verified monthly Built
+const SCN_BASE=+keepRate.toFixed(1);           // current Monthly Keep Rate (33.3%)
+const SCN_MONTHS=12;
+const keptMo=(k)=>SCN_INCOME*(k/100);          // dollars kept per month at rate k
+function drawTraj(k){
+  const c=trajCanvas, ctx=c.getContext('2d'), W=c.width, H=c.height;
+  ctx.clearRect(0,0,W,H);
+  const x0=46,x1=W-14,y0=H-26,y1=16;
+  const baseM=keptMo(SCN_BASE), scnM=keptMo(k);
+  const maxCum=keptMo(45)*SCN_MONTHS*1.06;      // scale to the 45% goal ceiling
+  const sx=m=>x0+(m/SCN_MONTHS)*(x1-x0);
+  const sy=v=>y0-(v/maxCum)*(y0-y1);
+  // grid + $ axis
+  ctx.strokeStyle='#23232E'; ctx.lineWidth=1; ctx.font='10px ui-monospace,Menlo,monospace'; ctx.fillStyle='#63637A';
+  for(let g=0;g<=4;g++){ const y=y1+(y0-y1)*g/4; ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
+    ctx.fillText('$'+Math.round(maxCum*(1-g/4)/1000)+'k',4,y+3); }
+  for(let m=0;m<=SCN_MONTHS;m+=3){ ctx.fillText(m+'mo', sx(m)-7, H-8); }
+  // scenario area (violet)
+  ctx.beginPath(); ctx.moveTo(sx(0),sy(0));
+  for(let m=0;m<=SCN_MONTHS;m++) ctx.lineTo(sx(m),sy(scnM*m));
+  ctx.lineTo(sx(SCN_MONTHS),y0); ctx.lineTo(sx(0),y0); ctx.closePath();
+  ctx.fillStyle='rgba(139,123,255,.16)'; ctx.fill();
+  // baseline (today's rate, dashed grey)
+  ctx.setLineDash([4,5]); ctx.strokeStyle='#63637A'; ctx.lineWidth=1.6; ctx.beginPath();
+  for(let m=0;m<=SCN_MONTHS;m++){ const X=sx(m),Y=sy(baseM*m); m?ctx.lineTo(X,Y):ctx.moveTo(X,Y); } ctx.stroke(); ctx.setLineDash([]);
+  // scenario line (violet)
+  ctx.strokeStyle='#8B7BFF'; ctx.lineWidth=2.4; ctx.lineJoin='round'; ctx.beginPath();
+  for(let m=0;m<=SCN_MONTHS;m++){ const X=sx(m),Y=sy(scnM*m); m?ctx.lineTo(X,Y):ctx.moveTo(X,Y); } ctx.stroke();
+  // endpoint
+  ctx.save(); ctx.shadowColor='#8B7BFF'; ctx.shadowBlur=12; ctx.fillStyle='#8B7BFF';
+  ctx.beginPath(); ctx.arc(sx(SCN_MONTHS),sy(scnM*SCN_MONTHS),4,0,7); ctx.fill(); ctx.restore();
+  // readout — arithmetic only
+  const scn12=scnM*SCN_MONTHS, extra=Math.round(scn12-baseM*SCN_MONTHS);
+  document.getElementById('projNum').textContent='$'+Math.round(scnM).toLocaleString()+' / mo kept';
+  document.getElementById('projRange').textContent='over 12 months: $'+Math.round(scn12).toLocaleString();
+  document.getElementById('projDelta').textContent=(extra>0?'+$'+extra.toLocaleString():'$0')+' vs today’s '+SCN_BASE+'% Keep Rate';
+  document.getElementById('krTarget').textContent=(+k).toFixed(1);
+}
+document.getElementById('krSlider').addEventListener('input',e=>drawTraj(+e.target.value));
+
+/* ---------- 5 · Strategist proposals ----------
+   LIVE: Strategist agent → Structured Output list<Intervention>{
+     title, why, est_monthly_cents, confidence, source_feature, semantic_action }.
+   semantic_action maps to STAKD's in-app action registry (real screens). */
+const MOVES=[
+  { title:'Check the 45% Monthly Keep Rate goal', why:'Review the goal against Maya’s current obligations.',
+    effect:0, conf:0.84, src:'verified goal', action:'SetGoal' },
+  { title:'Review Family Cuts', why:'Family Cuts rose $470, from $250 to $720.',
+    effect:0, conf:0.79, src:'category delta · family', action:'CreateCut' },
+  { title:'Protect 22% of the next Maya Creative payout', why:'Strategist proposed 30%; Guardian reduced it to 22% because income varies and obligations are upcoming.',
+    effect:0, conf:0.72, src:'variable Venture · Guardian review', action:'CreateStak' },
+];
+document.getElementById('ivgrid').innerHTML=MOVES.map((m,i)=>`
+  <div class="iv">
+    <div class="rank">rank ${i+1} · by est. $ kept</div>
+    <h4>${m.title}</h4>
+    <p class="why">${m.why}</p>
+    <div class="row"><span class="impact"><b>+$${m.effect}</b>/mo est</span><span class="conf">conf ${m.conf.toFixed(2)}</span></div>
+    <div class="src">evidence: ${m.src}</div>
+    <div class="opens">▸ opens <b>${m.action}</b></div>
+  </div>`).join('');
+
+/* ---------- 7 · weekly plan ---------- */
+function toggleTask(el){
+  el.classList.toggle('done');
+  if(el.classList.contains('done')) toast('Demo — this would open <b>'+el.dataset.action+'</b> in STAKD');
+  const tasks=[...document.querySelectorAll('.task')];
+  let pts=0; tasks.forEach(t=>{ if(t.classList.contains('done')) pts += (+t.dataset.effect)*(+t.dataset.conf); });
+  const liftPts=pts/DATA.month.built*100;           // confidence-weighted est pts
+  const done=tasks.filter(t=>t.classList.contains('done')).length;
+  document.getElementById('weekfill').style.width=(done/tasks.length*100)+'%';
+  document.getElementById('weekpct').textContent=liftPts.toFixed(0);
+  const goalGap=45-keepRate;
+  const hit=liftPts>=goalGap-0.5;
+  document.getElementById('weekmeter').classList.toggle('hit',hit);
+  const gn=document.getElementById('goalnote'); gn.classList.toggle('hit',hit);
+  gn.textContent = hit
+    ? '✓ All three reviewed moves selected. Maya remains in control.'
+    : 'Goal: 45% Monthly Keep Rate. Proposed moves do not guarantee a percentage change.';
+}
+
+/* ---------- 8 · constellation ----------
+   LIVE: Guardian → RiskVerdict per proposal {decision:approve|modify|reject, cap, reason};
+   Coach/BRIK reconciles agent outputs → WeeklyPlan; voice via Realtime API (not in demo). */
+let constelStarted=false;
+function startConstel(){
+  const c=document.getElementById('constel'), ctx=c.getContext('2d');
+  const W=c.width,H=c.height, cx=W/2, cy=H/2+4;
+  // agent identity = teal; Oracle uses violet (scenario), Guardian uses red (risk)
+  const agents=[
+    {name:'Analyst',   color:'#16D6C5'},
+    {name:'Oracle',    color:'#8B7BFF'},
+    {name:'Strategist',color:'#16D6C5'},
+    {name:'Guardian',  color:'#F0676B'},
+  ];
+  const R=104;
+  agents.forEach((a,i)=>{ const ang=-Math.PI/2 + i*2*Math.PI/agents.length; a.x=cx+Math.cos(ang)*R; a.y=cy+Math.sin(ang)*R*.78; });
+  let t=0;
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    const pulse=1+0.08*Math.sin(t/22);
+    agents.forEach((a,i)=>{
+      ctx.strokeStyle='rgba(150,150,180,.14)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(cx,cy); ctx.stroke();
+      const ph=((t/70)+(i/agents.length))%1, px=a.x+(cx-a.x)*ph, py=a.y+(cy-a.y)*ph;
+      ctx.fillStyle=a.color; ctx.globalAlpha=1-Math.abs(ph-.5)*.6;
+      ctx.beginPath(); ctx.arc(px,py,2.6,0,7); ctx.fill(); ctx.globalAlpha=1;
+    });
+    // BRIK core (teal)
+    ctx.save(); ctx.shadowColor='#16D6C5'; ctx.shadowBlur=24;
+    ctx.fillStyle='#0e1a19'; ctx.strokeStyle='#16D6C5'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx,cy,28*pulse,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.fillStyle='#16D6C5'; ctx.font='700 12px ui-monospace,Menlo,monospace'; ctx.textAlign='center';
+    ctx.fillText('BRIK', cx, cy+4);
+    agents.forEach((a,i)=>{
+      const act=(Math.sin(t/40+i)*0.5+0.5);
+      ctx.save(); ctx.shadowColor=a.color; ctx.shadowBlur=8+10*act;
+      ctx.fillStyle='#111119'; ctx.strokeStyle=a.color; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(a.x,a.y,16,0,7); ctx.fill(); ctx.stroke(); ctx.restore();
+      ctx.fillStyle=a.color; ctx.beginPath(); ctx.arc(a.x,a.y,4+2*act,0,7); ctx.fill();
+      ctx.fillStyle='#EDEDF4'; ctx.font='600 11px -apple-system,system-ui,sans-serif'; ctx.textAlign='center';
+      ctx.fillText(a.name, a.x, a.y>cy? a.y+32 : a.y-24);
+    });
+    t++; if(!reduce) requestAnimationFrame(frame);
+  }
+  if(constelStarted) return; constelStarted=true; frame();
+}
+</script>

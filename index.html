@@ -1,0 +1,174 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<title>BRIK — STAKD · Build Week Submission</title>
+<!--
+  Submission hub. One front door → two demos (both open in new tabs):
+    App demo (design reskin):   https://claude.ai/code/artifact/455da9d8-4aa4-430d-8f80-012d5fc57150
+    System demo (console):      https://claude.ai/code/artifact/97c2536b-ac53-4515-ac77-a962a2fcc021
+  Share all three artifacts so the links resolve for judges.
+-->
+<style>
+  :root{
+    color-scheme:dark;
+    --canvas:#080b0a; --panel:#0d100f; --ink:#F3F4F1;
+    --teal:#16D6C5; --teal2:#0FAE9F; --teal3:#0A7D72; --glow:#35f0c0;
+    --violet:#8B7BFF; --gold:#E8C572; --dim:#8a9691; --faint:#5b6a66;
+    --line:rgba(255,255,255,.08);
+    --disp:'Saira Condensed','Arial Narrow','Roboto Condensed',system-ui,sans-serif;
+    --body:'Space Grotesk',-apple-system,'Segoe UI',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1100px 640px at 78% -10%,rgba(22,214,197,.10),transparent 60%),
+      radial-gradient(900px 600px at 6% 110%,rgba(139,123,255,.08),transparent 55%),
+      var(--canvas);
+    color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh;
+  }
+  @keyframes pulse{50%{opacity:.4}}
+  .wrap{max-width:960px;margin:0 auto;padding:clamp(28px,6vw,64px) clamp(18px,4vw,32px) 56px}
+
+  /* header */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:clamp(36px,7vw,64px)}
+  .logo{display:flex;flex-direction:column;align-items:center;gap:2.5px}
+  .logo i{display:block;clip-path:polygon(50% 0%,100% 55%,100% 100%,50% 45%,0% 100%,0% 55%)}
+  .logo i:nth-child(1){width:16px;height:7px;background:var(--teal)}
+  .logo i:nth-child(2){width:21px;height:7px;background:var(--teal2)}
+  .logo i:nth-child(3){width:26px;height:7px;background:var(--teal3)}
+  .word{font-family:var(--disp);font-weight:800;font-style:italic;font-size:24px;letter-spacing:.5px}
+  .word b{color:var(--teal)} .word span{font-style:normal;font-weight:700;font-size:14px;margin-left:4px}
+  .pill{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--gold);
+    border:1px solid rgba(232,197,114,.4);border-radius:999px;padding:6px 11px;background:rgba(232,197,114,.08);text-transform:uppercase;white-space:nowrap}
+  .pill i{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;margin-right:6px;vertical-align:middle;animation:pulse 1.6s infinite}
+
+  /* hero */
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:3px;color:var(--teal);text-transform:uppercase;margin-bottom:16px}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(52px,12vw,104px);line-height:.9;margin:0;letter-spacing:.5px}
+  h1 .os{display:block;font-weight:700;font-style:italic;font-size:clamp(20px,4.2vw,34px);color:var(--teal);letter-spacing:0;margin-top:8px}
+  .lede{font-size:clamp(16px,2.4vw,19px);color:var(--dim);max-width:60ch;line-height:1.6;margin:22px 0 0}
+  .lede b{color:var(--ink);font-weight:600}
+  .metric{font-family:var(--mono);font-size:12.5px;color:var(--faint);margin-top:18px;letter-spacing:.5px}
+  .metric b{color:var(--teal)}
+
+  /* two doors */
+  .doors{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:clamp(36px,6vw,52px)}
+  @media(max-width:860px){.doors{grid-template-columns:1fr}}
+  .door{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:20px;padding:24px;background:linear-gradient(180deg,var(--panel),#0a0c0b);text-decoration:none;color:inherit;transition:.18s;position:relative;overflow:hidden}
+  .door:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 24px 50px -30px var(--accent)}
+  .door.app{--accent:rgba(22,214,197,.5)}
+  .door.sys{--accent:rgba(139,123,255,.5)}
+  .door.build{--accent:rgba(231,197,114,.5)}
+  .door .tagrow{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+  .door .num{font-family:var(--mono);font-size:11px;color:#03110F;background:var(--dotc);width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:700}
+  .door.app{--dotc:var(--teal)} .door.sys{--dotc:var(--violet)} .door.build{--dotc:var(--gold)}
+  .door .kind{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)}
+  .door h2{font-family:var(--disp);font-weight:700;font-size:34px;line-height:1;margin:0 0 4px}
+  .door .sub{font-size:14px;color:var(--dim);margin:0 0 16px}
+  .door .sub b{color:var(--ink)}
+  .door ul{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:9px}
+  .door li{font-size:13.5px;color:var(--dim);display:flex;gap:9px;line-height:1.4}
+  .door li:before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:2px;background:var(--dotc);margin-top:6px}
+  .door .go{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--dotc);letter-spacing:.5px}
+  .door .go .arr{transition:.18s}
+  .door:hover .go .arr{transform:translateX(4px)}
+
+  /* thesis */
+  .thesis{margin-top:clamp(32px,5vw,44px);border:1px solid rgba(22,214,197,.3);border-radius:18px;padding:clamp(22px,4vw,30px);
+    background:linear-gradient(180deg,rgba(22,214,197,.08),transparent);text-align:center}
+  .thesis p{margin:0;font-family:var(--disp);font-weight:700;font-size:clamp(19px,3.4vw,27px);line-height:1.4;letter-spacing:.3px}
+  .thesis .a{color:var(--teal)}
+
+  .foot{margin-top:26px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--faint);text-align:center}
+  .foot b{color:var(--dim)}
+  /* BRIK yell hero */
+  .brikhero{display:flex;align-items:center;gap:clamp(18px,5vw,52px);flex-wrap:wrap}
+  .brikhero h1{margin:0}
+  .yellfig{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .yellbubble{font-family:var(--disp);font-weight:800;font-style:italic;font-size:clamp(30px,5vw,52px);color:var(--gold);letter-spacing:1px;text-shadow:0 0 24px rgba(232,197,114,.55);animation:yellPop .6s cubic-bezier(.2,1.5,.4,1)}
+  .brikchar{display:flex;flex-direction:column;align-items:center;gap:5px;filter:drop-shadow(0 0 6px var(--glow)) drop-shadow(0 0 22px rgba(232,197,114,.7));animation:bob 3s ease-in-out infinite}
+  .brikchar .blk{background:linear-gradient(145deg,#0a0f0d,#040605);clip-path:polygon(11px 0,calc(100% - 11px) 0,100% 11px,100% calc(100% - 11px),calc(100% - 11px) 100%,11px 100%,0 calc(100% - 11px),0 11px)}
+  .brikchar .bk-face{width:96px;height:58px;box-shadow:inset 0 0 0 3px var(--glow);display:flex;align-items:center;justify-content:center;gap:16px;position:relative}
+  .brikchar .eye{width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 10px var(--glow)}
+  .brikchar .mouth{position:absolute;bottom:9px;width:26px;height:11px;background:var(--glow);border-radius:0 0 11px 11px}
+  .brikchar .bk-mid{width:110px;height:24px;box-shadow:inset 0 0 0 3px var(--teal2)}
+  .brikchar .bk-base{width:124px;height:24px;box-shadow:inset 0 0 0 3px var(--gold)}
+  @keyframes yellPop{0%{transform:scale(.8)}60%{transform:scale(1.13)}100%{transform:scale(1)}}
+  @keyframes bob{50%{transform:translateY(-6px)}}
+  @media(prefers-reduced-motion:reduce){.brikchar,.yellbubble{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="logo"><i></i><i></i><i></i></div>
+    <div class="word">STAK<b>D</b><span>· BRIK</span></div>
+    <div class="pill" style="color:#3FCF8E;border-color:rgba(63,207,142,.4);background:rgba(63,207,142,.1)"><i style="background:#3FCF8E"></i>Live · GPT-5.6 Sol</div>
+    <div class="pill" style="margin-left:8px"><i></i>Simulated concept · synthetic data</div>
+  </div>
+
+  <div class="eyebrow" style="text-align:center">OpenAI Build Week · Submission</div>
+  <div class="brikhero" style="flex-direction:column;align-items:center;text-align:center;gap:0">
+    <div class="yellbubble">STAKD!</div>
+    <div class="brikchar" aria-hidden="true">
+      <div class="blk bk-face"><span class="eye"></span><span class="eye"></span><span class="mouth"></span></div>
+      <div class="blk bk-mid"></div>
+      <div class="blk bk-base"></div>
+    </div>
+    <h1 style="margin-top:26px">BRIK</h1>
+    <div style="font-family:var(--disp);font-weight:700;font-style:italic;font-size:clamp(20px,4.2vw,34px);color:var(--teal);margin-top:6px">The AI Wealth Reasoning Layer for STAKD</div>
+  </div>
+  <p class="lede" style="margin-left:auto;margin-right:auto;text-align:center">Everyone knows what they <b>earn</b>. Almost no one knows what they <b>keep</b>. BRIK computes Maya's <b>Monthly Keep Rate</b>, explains what changed, frames scenarios, and hands her three reviewed moves through one consistent crew.</p>
+  <div class="metric" style="text-align:center">Monthly Keep Rate = (Built − Cuts) ÷ Built &nbsp;·&nbsp; <b>Maya's current rate is 33.3%</b></div>
+
+  <div class="doors">
+    <a class="door app" href="./demo-design.html" target="_blank" rel="noopener">
+      <div class="tagrow"><span class="num">A</span><span class="kind">The App · how it feels</span></div>
+      <h2>The Product</h2>
+      <p class="sub">The <b>felt experience</b> — STAKD's real design language, on a phone.</p>
+      <ul>
+        <li>Animated Monthly Keep Rate reveal + BRIK, your coach</li>
+        <li>Behavior explained, streamed line by line</li>
+        <li>Interactive Scenario Lab — drag your future</li>
+        <li>Moves, weekly plan, and the 4-agent crew</li>
+      </ul>
+      <span class="go">Open the app demo <span class="arr">→</span></span>
+    </a>
+
+    <a class="door sys" href="./demo.html" target="_blank" rel="noopener">
+      <div class="tagrow"><span class="num">B</span><span class="kind">The System · how it thinks</span></div>
+      <h2>The Reasoning</h2>
+      <p class="sub">The <b>credibility layer</b> — the agents, the math, the guardrails.</p>
+      <ul>
+        <li>Deterministic Keep Engine — figures never invented</li>
+        <li>One crew: Analyst · Oracle · Strategist · Guardian · BRIK</li>
+        <li>Guardian visibly overrules the Strategist</li>
+        <li>Clearly labeled scenario estimates from verified history</li>
+      </ul>
+      <span class="go">Open the system demo <span class="arr">→</span></span>
+    </a>
+
+    <a class="door build" href="./build.html" target="_blank" rel="noopener">
+      <div class="tagrow"><span class="num">C</span><span class="kind">The Build · how it's made</span></div>
+      <h2>The Blueprint</h2>
+      <p class="sub">The <b>architecture</b> — pipeline, crew, data model, and plan.</p>
+      <ul>
+        <li>Ingest → Keep Engine → context → crew → action</li>
+        <li>The crew: product names ↔ engine roles</li>
+        <li>Monthly Keep Rate + citable data model</li>
+        <li>Reasoning flow, stack &amp; the build plan</li>
+      </ul>
+      <span class="go">Open the blueprint <span class="arr">→</span></span>
+    </a>
+  </div>
+
+  <div class="thesis">
+    <p><span class="a">STAKD</span> calculates the truth. <span class="a">OpenAI</span> reasons over the truth. <span class="a">BRIK</span> communicates the truth.</p>
+  </div>
+
+  <div class="foot">
+    <b>BRIK = the OpenAI reasoning layer on top of STAKD's existing deterministic engine.</b><br>
+    Simulated concept · synthetic data. Account linking, automated transfers &amp; subscription cancellation are illustrative — not live in STAKD today.
+  </div>
+</div>

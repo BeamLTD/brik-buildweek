@@ -1,0 +1,8 @@
+# Never upload the local dev server, secrets, or dependencies.
+# On Vercel the live endpoint is api/analyst.js; the key is a Vercel env var, not a file.
+server/
+**/.env
+**/.env.*
+**/node_modules/
+handoff/
+*.png

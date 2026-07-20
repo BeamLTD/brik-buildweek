@@ -1,0 +1,276 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:ital,wght@0,600;0,700;0,800;1,700;1,800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<title>BRIK — The Build · Architecture &amp; Plan</title>
+<!--
+  "The Build" — door C of the BRIK Build Week submission. Styled companion to SPEC.md,
+  aligned to the locked truth (Maya · Monthly Keep Rate · simulated framing · one crew vocabulary).
+  // LIVE marks where OpenAI (Responses API + Structured Outputs + Agents SDK) slots in.
+-->
+<style>
+  :root{
+    color-scheme:dark;
+    --canvas:#080b0a; --panel:#0d100f; --panel2:#111514; --ink:#F3F4F1;
+    --teal:#16D6C5; --teal2:#0FAE9F; --teal3:#0A7D72; --violet:#8B7BFF; --gold:#E8C572;
+    --cut:#FF6B5E; --gain:#3FCF8E; --dim:#8a9691; --faint:#5b6a66; --line:rgba(255,255,255,.08);
+    --disp:'Saira Condensed','Arial Narrow','Roboto Condensed',system-ui,sans-serif;
+    --body:'Space Grotesk',-apple-system,'Segoe UI',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:radial-gradient(1000px 560px at 82% -10%,rgba(231,197,114,.07),transparent 60%),
+      radial-gradient(900px 600px at 4% 108%,rgba(22,214,197,.07),transparent 55%),var(--canvas);
+    color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh;
+  }
+  @keyframes pulse{50%{opacity:.4}}
+  .wrap{max-width:1000px;margin:0 auto;padding:clamp(24px,5vw,52px) clamp(18px,4vw,32px) 60px}
+
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:clamp(28px,5vw,44px)}
+  .logo{display:flex;flex-direction:column;align-items:center;gap:2.5px}
+  .logo i{display:block;clip-path:polygon(50% 0%,100% 55%,100% 100%,50% 45%,0% 100%,0% 55%)}
+  .logo i:nth-child(1){width:16px;height:7px;background:var(--teal)}
+  .logo i:nth-child(2){width:21px;height:7px;background:var(--teal2)}
+  .logo i:nth-child(3){width:26px;height:7px;background:var(--teal3)}
+  .word{font-family:var(--disp);font-weight:800;font-style:italic;font-size:23px;letter-spacing:.5px}
+  .word b{color:var(--teal)} .word span{font-style:normal;font-weight:700;font-size:13px;margin-left:4px}
+  .home{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 13px;transition:.16s}
+  .home:hover{border-color:var(--teal);color:var(--teal)}
+
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(38px,7vw,64px);line-height:.95;margin:0 0 14px;letter-spacing:.5px}
+  .lede{font-size:clamp(15px,2.2vw,18px);color:var(--dim);max-width:64ch;line-height:1.6;margin:0}
+  .lede b{color:var(--ink);font-weight:600}
+  .simnote{font-family:var(--mono);font-size:11px;color:var(--faint);margin-top:14px;border-left:2px solid rgba(231,197,114,.4);padding-left:12px;line-height:1.6}
+
+  section{margin-top:clamp(30px,5vw,46px)}
+  h2{font-family:var(--disp);font-weight:700;font-size:clamp(24px,4vw,34px);margin:0 0 6px;letter-spacing:.3px}
+  .snum{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;display:block;margin-bottom:6px}
+  .lead{color:var(--dim);font-size:14.5px;max-width:66ch;margin:0 0 18px;line-height:1.55}
+
+  /* pipeline */
+  .flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}
+  .fnode{flex:1 1 140px;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel);display:flex;flex-direction:column;justify-content:center;gap:5px;text-align:center}
+  .fnode .fk{font-family:var(--mono);font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:1px}
+  .fnode .fv{font-size:13.5px;font-weight:700;line-height:1.2}
+  .fnode.hl{border-color:rgba(22,214,197,.4);background:linear-gradient(180deg,rgba(22,214,197,.08),transparent)}
+  .fnode.hl .fv{color:var(--teal)}
+  .fnode.act{border-color:rgba(63,207,142,.35)} .fnode.act .fv{color:var(--gain)}
+  .farrow{align-self:center;color:var(--faint);font-family:var(--mono)}
+  @media(max-width:660px){.farrow{display:none}}
+
+  /* crew */
+  .crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+  .agent{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--panel);border-left:3px solid var(--ac,var(--teal))}
+  .agent.lead{--ac:var(--gold)} .agent.analyst{--ac:var(--teal)} .agent.oracle{--ac:var(--violet)} .agent.strategist{--ac:var(--cut)} .agent.guardian{--ac:#ff9f45}
+  .agent .nm{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:.5px}
+  .agent .role{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ac,var(--teal));margin:2px 0 8px}
+  .agent .d{font-size:13px;color:var(--dim);line-height:1.5}
+  .rosetta{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--dim);border:1px dashed var(--line);border-radius:12px;padding:14px;line-height:1.6}
+  .rosetta b{color:var(--teal)}
+
+  /* generic cards / grids */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--panel)}
+  .card h3{font-family:var(--disp);font-weight:700;font-size:19px;margin:0 0 10px;letter-spacing:.3px}
+  .kv{font-family:var(--mono);font-size:12.5px;color:var(--dim);line-height:1.9}
+  .kv b{color:var(--ink)} .kv .t{color:var(--teal)} .kv .g{color:var(--gain)} .kv .r{color:var(--cut)}
+  .metric{font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:4px}
+  .metric b{color:var(--teal)}
+
+  /* chain */
+  .chain{display:flex;flex-direction:column;gap:10px}
+  .step{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel)}
+  .step .i{font-family:var(--mono);font-size:11px;font-weight:700;color:#03110F;background:var(--teal);width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex:0 0 auto}
+  .step .b{flex:1;min-width:0}
+  .step .nm{font-weight:700;font-size:14.5px}
+  .step .dd{font-size:13px;color:var(--dim);margin-top:2px;line-height:1.5}
+  .step .dd code{font-family:var(--mono);font-size:11.5px;color:var(--teal);background:rgba(22,214,197,.08);padding:1px 5px;border-radius:4px}
+
+  /* plan table */
+  .plan{width:100%;border-collapse:collapse;font-size:13.5px}
+  .plan td,.plan th{border-bottom:1px solid var(--line);padding:11px 10px;text-align:left;vertical-align:top}
+  .plan th{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--faint);text-transform:uppercase;font-weight:500}
+  .plan td:first-child{font-family:var(--mono);color:var(--teal);white-space:nowrap;width:1%}
+  .plan .real{color:var(--gain);font-family:var(--mono);font-size:11px}
+  .plan .sim{color:var(--gold);font-family:var(--mono);font-size:11px}
+
+  .foot{margin-top:38px;font-family:var(--mono);font-size:11px;line-height:1.8;color:var(--faint);text-align:center;border-top:1px solid var(--line);padding-top:22px}
+  .foot b{color:var(--dim)}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="logo"><i></i><i></i><i></i></div>
+    <div class="word">STAK<b>D</b><span>· BRIK</span></div>
+    <a class="home" href="./index.html">← submission home</a>
+  </div>
+
+  <div class="eyebrow">The Build · how it's made</div>
+  <h1>How BRIK is built.</h1>
+  <p class="lede">BRIK is the <b>OpenAI reasoning layer</b> on top of STAKD's existing <b>deterministic Keep Engine</b>. STAKD does the math; the agents reason over it; BRIK turns it into something you'd actually act on. The rule that makes it trustworthy: <b>the model never invents a number</b> — every figure it speaks cites a value the engine computed.</p>
+  <p class="simnote">Concept for OpenAI Build Week · synthetic data (persona: Maya). Account linking, automated transfers &amp; subscription cancellation shown in the app demo are illustrative — not live in STAKD today.</p>
+
+  <!-- 1 · ARCHITECTURE -->
+  <section>
+    <span class="snum">01 · Architecture</span>
+    <h2>The pipeline</h2>
+    <p class="lead">Deterministic where money is involved; generative where language and judgment are. Five stages, one direction.</p>
+    <div class="flow">
+      <div class="fnode"><div class="fk">1 · ingest</div><div class="fv">Staks &amp; Cuts<br><span style="font-weight:400;color:var(--faint);font-size:11px">manual · logged in STAKD</span></div></div>
+      <span class="farrow">→</span>
+      <div class="fnode hl"><div class="fk">2 · math</div><div class="fv">Keep Engine<br><span style="font-weight:400;color:var(--faint);font-size:11px">deterministic</span></div></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><div class="fk">3 · structure</div><div class="fv">Money Context<br><span style="font-weight:400;color:var(--faint);font-size:11px">typed JSON pack</span></div></div>
+      <span class="farrow">→</span>
+      <div class="fnode"><div class="fk">4 · reason</div><div class="fv">The crew<br><span style="font-weight:400;color:var(--faint);font-size:11px">4 agents · OpenAI</span></div></div>
+      <span class="farrow">→</span>
+      <div class="fnode hl"><div class="fk">5 · communicate</div><div class="fv">BRIK synthesis</div></div>
+      <span class="farrow">→</span>
+      <div class="fnode act"><div class="fk">6 · act</div><div class="fv">Real STAKD action</div></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="card">
+        <h3>Where OpenAI sits</h3>
+        <div class="kv" style="line-height:2">
+          Transactions <span class="t">↓</span><br>
+          <b>buildInsightContext()</b> <span class="t">↓</span><br>
+          <b>buildBrikContext()</b> <span class="t">↓</span><br>
+          Allowlisted Financial Context <span class="t">↓</span><br>
+          <span class="t">GPT-5.6 Sol Reasoning</span> <span class="t">↓</span><br>
+          BRIK <span class="t">↓</span><br>
+          <span class="g">Reviewed Actions</span>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(63,207,142,.3)">
+        <h3>The guarantee</h3>
+        <div class="kv" style="line-height:1.95">
+          <b>OpenAI never calculates financial figures.</b><br>
+          OpenAI receives only structured, allowlisted context.<br>
+          <span class="t">STAKD remains the source of truth.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · THE CREW -->
+  <section>
+    <span class="snum">02 · The crew</span>
+    <h2>Five agents, one coach</h2>
+    <p class="lead">Each agent is one job, one prompt, one output schema, and read-only tools scoped to its lane. BRIK reconciles them and is the only one that speaks to you.</p>
+    <div class="crew">
+      <div class="agent lead"><div class="nm">BRIK</div><div class="role">Coach · orchestrator</div><div class="d">Reconciles the crew, resolves conflicts, and delivers Maya's Monthly Keep Rate plan in warm, plain language.</div></div>
+      <div class="agent analyst"><div class="nm">ANALYST</div><div class="role">Explain</div><div class="d">Explains why Maya's Monthly Keep Rate changed, using only verified context.</div></div>
+      <div class="agent oracle"><div class="nm">ORACLE</div><div class="role">Scenarios</div><div class="d">Frames simple estimates from Maya's six-month history; it does not claim a production forecast.</div></div>
+      <div class="agent strategist"><div class="nm">STRATEGIST</div><div class="role">Propose</div><div class="d">Ranks practical moves and proposes setting aside 30% of the next variable Venture payout.</div></div>
+      <div class="agent guardian"><div class="nm">GUARDIAN</div><div class="role">Risk gate</div><div class="d">Checks every proposal against essentials, income volatility and cash-flow timing — and can cap or overrule the others.</div></div>
+    </div>
+    <div class="rosetta">One crew everywhere: Analyst · Oracle · Strategist · Guardian · BRIK. Guardian makes the visible call in the demo, reducing the Strategist's proposed 30% payout set-aside to 22% because Maya's income varies and obligations are upcoming.</div>
+  </section>
+
+  <!-- 3 · KEEP ENGINE + DATA -->
+  <section>
+    <span class="snum">03 · Keep Engine &amp; data</span>
+    <h2>The math, and the truth it hands over</h2>
+    <p class="lead">The engine is code, not a model. It computes the one number, then hands the agents a structured pack where every figure is citable.</p>
+    <div class="metric">Monthly Keep Rate = <b>(Built − Cuts) ÷ Built</b> &nbsp;·&nbsp; displayed as a percentage &nbsp;·&nbsp; transfers excluded</div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h3>Sample: Maya · this month</h3>
+        <div class="kv">
+          Built <b>$5,400</b> &nbsp; Cuts <span class="r">$3,600</span> &nbsp; Kept <span class="g">$1,800</span><br>
+          Monthly Keep Rate <span class="t">33.3%</span> &nbsp;·&nbsp; <span class="r">▼ 16.7 pts</span> vs 50.0% last month<br>
+          Drivers: family <span class="r">+$470</span> · food <span class="r">+$420</span><br>
+          Biggest Cut: <b>August Rent Reserve · $1,550</b>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Data model (sketch)</h3>
+        <div class="kv">
+          <b>keep_snapshots</b> — monthly built/cut/kept/rate<br>
+          <b>behavior_features</b> — deltas + <span class="t">evidence</span> (citable)<br>
+          <b>interventions</b> — moves + est. effect + source<br>
+          <b>weekly_plans</b> — tasks + semantic action<br>
+          <b>agent_runs</b> — output + model + trace_id
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · REASONING FLOW -->
+  <section>
+    <span class="snum">04 · Reasoning flow</span>
+    <h2>How a run happens</h2>
+    <p class="lead">Fan out the independent lenses in parallel, gate them through risk, then reconcile. Built on the OpenAI Agents SDK; every agent returns Structured Outputs, so the app parses data, not prose.</p>
+    <div class="chain">
+      <div class="step"><div class="i">1</div><div class="b"><div class="nm">Classify &amp; feature-build <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">· deterministic + fast model</span></div><div class="dd">Every transaction → <code>earned / cut / transfer</code>; the engine computes deltas and writes citable <code>evidence</code> strings.</div></div></div>
+      <div class="step"><div class="i">2</div><div class="b"><div class="nm">Explain — Analyst <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">· streamed</span></div><div class="dd">Why Monthly Keep Rate moved, in plain language. No figure the engine didn't compute.</div></div></div>
+      <div class="step"><div class="i">3</div><div class="b"><div class="nm">Estimate — Oracle</div><div class="dd">Simple scenarios based on Maya's verified six-month history; not production Monte Carlo.</div></div></div>
+      <div class="step"><div class="i">4</div><div class="b"><div class="nm">Propose — Strategist</div><div class="dd">Three moves mapped to real STAKD semantic actions (<code>SetGoal</code>, <code>CreateStak</code>, <code>CreateCut</code>).</div></div></div>
+      <div class="step"><div class="i">5</div><div class="b"><div class="nm">Gate — GUARDIAN</div><div class="dd">Reviews every proposal for essentials, volatility, cash-flow timing; returns <code>approve / modify / reject</code> with a reason.</div></div></div>
+      <div class="step"><div class="i">6</div><div class="b"><div class="nm">Reconcile &amp; speak — BRIK <span style="font-family:var(--mono);font-size:10px;color:var(--faint)">· Realtime voice (planned)</span></div><div class="dd">Merges it all into the weekly plan and a short, warm brief. Writes <code>weekly_plans</code>; captures <code>trace_id</code>.</div></div></div>
+    </div>
+  </section>
+
+  <!-- 5 · STACK + WHAT'S REAL -->
+  <section>
+    <span class="snum">05 · Stack &amp; honesty</span>
+    <h2>What's real, what's simulated</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Stack</h3>
+        <div class="kv">
+          Reasoning: <span class="t">GPT-5.6 Sol</span> · OpenAI Responses API · Structured Outputs<br>
+          Orchestration: <span class="t">Agents SDK</span> · fan-out → gate → reconcile<br>
+          Voice: Realtime API <span style="color:var(--gold)">(planned)</span><br>
+          App: STAKD · React Native / Expo (SDK 54)<br>
+          Data: Supabase · Postgres + RLS
+        </div>
+      </div>
+      <div class="card">
+        <h3>Live vs illustrative</h3>
+        <div class="kv">
+          <span class="g">Live today:</span> native STAKD integration · <span class="t">GPT-5.6 Sol Analyst reasoning</span> · OpenAI Responses API · Supabase Edge Functions · deterministic Keep Engine · semantic action routing · Guardian disagreement logic<br><br>
+          <span style="color:var(--gold)">Illustrative / roadmap:</span> production multi-agent orchestration · Monte Carlo forecasting · autonomous financial actions · live banking integrations
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5b · BUILT WITH CODEX -->
+  <section>
+    <span class="snum">Tooling · Built with Codex</span>
+    <h2>Built with Codex</h2>
+    <p class="lead">Codex accelerated the build end to end — so the week went into the reasoning layer, not boilerplate.</p>
+    <div class="grid2">
+      <div class="card"><div class="kv"><span class="g">✓</span> Architecture iteration<br><span class="g">✓</span> Synthetic Maya datasets<br><span class="g">✓</span> Native screen implementation<br><span class="g">✓</span> Navigation debugging</div></div>
+      <div class="card"><div class="kv"><span class="g">✓</span> Edge Function development<br><span class="g">✓</span> Testing and QA<br><span class="g">✓</span> Agent scaffolding</div></div>
+    </div>
+  </section>
+
+  <!-- 6 · BUILD PLAN -->
+  <section>
+    <span class="snum">06 · Build plan</span>
+    <h2>The week</h2>
+    <table class="plan">
+      <thead><tr><th>Day</th><th>Deliverable</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Keep Engine computing Maya's 33.3% Monthly Keep Rate from the synthetic ledger</td><td class="real">real</td></tr>
+        <tr><td>1</td><td>Demo shells — app (phone) + system (console)</td><td class="real">done ✓</td></tr>
+        <tr><td>2</td><td>Classifier + feature store with evidence strings</td><td class="real">real</td></tr>
+        <tr><td>2–3</td><td>Analyst streaming + Oracle scenarios</td><td class="real">real</td></tr>
+        <tr><td>3</td><td>Strategist proposals + Guardian gate (visible overrule)</td><td class="real">real</td></tr>
+        <tr><td>4</td><td>BRIK orchestrator (Agents SDK) → weekly plan + trace</td><td class="real">real</td></tr>
+        <tr><td>4</td><td>Realtime voice brief</td><td class="sim">stretch</td></tr>
+        <tr><td>5</td><td>Wire to endpoints behind a DEMO_MODE flag · rehearse · record</td><td class="real">real</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="foot">
+    <b>BRIK — the OpenAI reasoning layer on top of STAKD's deterministic engine.</b><br>
+    Full technical deep-dive: SPEC.md in the repo. Concept · synthetic data · not production-complete by design.
+  </div>
+</div>
