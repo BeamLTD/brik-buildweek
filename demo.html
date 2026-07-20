@@ -452,7 +452,7 @@
       <section class="scene" data-scene="4">
         <div class="eyebrow">Step 05 — Propose</div>
         <h2 class="scene-h">Three moves</h2>
-        <p class="sub">The <b>Strategist</b> ranks moves by estimated dollars kept — each one maps to an actual native STAKD screen Maya taps herself. Nothing moves automatically, and this public web demonstration does not execute a financial action.</p>
+        <p class="sub">The <b>Strategist</b> proposes three practical moves for Maya to review — each one maps to an actual native STAKD screen Maya taps herself. Nothing moves automatically, and this public web demonstration does not execute a financial action.</p>
         <div class="ivgrid" id="ivgrid"></div>
         <p class="note">Strategist proposes. Guardian reviews next — BRIK never cancels a subscription, sweeps funds, or moves money automatically. It opens the right STAKD screen and Maya decides.</p>
         <div class="cta-row"><button class="btn primary" onclick="go(5)">Send to Guardian →</button></div>
@@ -838,10 +838,10 @@ const MOVES=[
 ];
 document.getElementById('ivgrid').innerHTML=MOVES.map((m,i)=>`
   <div class="iv">
-    <div class="rank">rank ${i+1} · by est. $ kept</div>
+    <div class="rank">move ${i+1} · proposed for review</div>
     <h4>${m.title}</h4>
     <p class="why">${m.why}</p>
-    <div class="row"><span class="impact"><b>+$${m.effect}</b>/mo est</span><span class="conf">conf ${m.conf.toFixed(2)}</span></div>
+    <div class="row"><span class="impact" style="color:var(--dim);font-weight:400">proposed · Maya decides</span><span class="conf">conf ${m.conf.toFixed(2)}</span></div>
     <div class="src">evidence: ${m.src}</div>
     <div class="opens">▸ opens <b>${m.action}</b></div>
   </div>`).join('');
