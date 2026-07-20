@@ -15,7 +15,7 @@ Dated record of what was built during OpenAI Build Week, with commit hashes and 
 | 2026-07-19 | `c91dedb` | CPO copy sweep + `brik.mystakd.com` live | 4 demo pages, docs | — | live branded domain |
 | 2026-07-19/20 | _(this pass)_ | **Truth + security + QA sweep**: remove Agents-SDK/multi-agent overclaims; harden `/api/analyst` (server-side canonical context, rate limit, origin allowlist, size cap, prompt tightening); add before/after + Codex + third-party docs; correct Devpost/video; P1 copy + nav | `api/analyst.js`, 4 demo pages, `README.md`, `DEVPOST.md`, `VIDEO_SCRIPT.md`, new docs | — | this file + QA report |
 
-¹ See `CODEX_BUILD_LOG.md` for Codex session detail. Where a row is marked "yes," Codex contributed to code generation, dataset creation, and/or debugging during that work; populate the linked session exports there.
+¹ See `CODEX_BUILD_LOG.md` for Codex session detail. Where a row is marked "yes," Codex contributed to code generation, dataset creation, and/or debugging during that work. See CODEX_BUILD_LOG.md for the verified and redacted Codex session evidence.
 
 ## Timeline summary
 - **Concept → live in ~2 days.** Started as an isolated demo branch (zero risk to the live v11 STAKD product), ended as a live, GPT-5.6 Sol-powered reasoning layer served at `brik.mystakd.com` plus a native in-app BRIK Coach verified in the iOS Simulator.

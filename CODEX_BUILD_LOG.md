@@ -68,7 +68,7 @@ The following project outcomes are intentionally not attributed to Codex because
 - A Codex session creating the July 19 README, Devpost, or video-script submission package; the relevant commit is also referenced by a `claude/...` worktree branch.
 - Codex-authored commit operations for `8598598` or `4d54c01`; the rollout contains edits and tests, while git records the human identity as commit author.
 - A preserved raw deployment log for the public Vercel site in this repository. `DEPLOY.md`, live-URL documentation, endpoint source, and commit subjects corroborate the outcome but are not equivalent to a Codex deployment transcript.
-- The Codex implementation-session evidence verified live Responses API calls using the model identifier returned as `gpt-5.6`. Later public materials use the product label ‘GPT-5.6 Sol.’ The final submission must confirm and standardize the exact deployed model name before recording.
+- The native Codex implementation-session trace reported the model identifier `gpt-5.6`. OpenAI documentation confirms that the `gpt-5.6` alias routes to GPT-5.6 Sol. The public web endpoint uses the explicit `gpt-5.6-sol` identifier.
 
 ## Evidence sources used
 
