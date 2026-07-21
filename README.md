@@ -10,6 +10,7 @@ Built for **OpenAI Build Week**.
 
 ## Live demo
 
+- **Watch the 2-min demo:** https://www.youtube.com/watch?v=1UpvaIBMwD8
 - **Hub:** https://brik.mystakd.com
 - **The Product** (how it feels): https://brik.mystakd.com/demo-design.html
 - **The Reasoning** (how it thinks — live GPT): https://brik.mystakd.com/demo.html

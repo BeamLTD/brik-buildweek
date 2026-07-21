@@ -64,4 +64,4 @@ Production multi-agent orchestration, scenario forecasting, and — only behind 
 ## Links
 - **Live demo:** https://brik.mystakd.com  (also at https://brik-buildweek.vercel.app)
 - **Repo:** https://github.com/BeamLTD/brik-buildweek
-- **Video:** ⚠️ PLACEHOLDER — replace with the final public (logged-out-accessible) YouTube link before submitting. Script: VIDEO_SCRIPT.md
+- **Video:** https://www.youtube.com/watch?v=1UpvaIBMwD8
